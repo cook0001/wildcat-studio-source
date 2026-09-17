@@ -1,13 +1,13 @@
-name: Cross-Platform Release Build
+name: Release
 
 on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 jobs:
-  build-and-release:
+  release:
     permissions:
       contents: write
     strategy:
@@ -16,26 +16,29 @@ jobs:
         include:
           - platform: 'macos-latest'
             args: '--target universal-apple-darwin'
+            targets: 'aarch64-apple-darwin,x86_64-apple-darwin'
           - platform: 'windows-latest'
             args: ''
+            targets: ''
           - platform: 'ubuntu-22.04'
             args: ''
+            targets: ''
 
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Node.js 20
+      - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
-      - name: Install Rust stable
+      - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          targets: ${{ matrix.targets }}
 
       - name: Install Linux build dependencies
         if: matrix.platform == 'ubuntu-22.04'
@@ -49,27 +52,11 @@ jobs:
       - name: Build Tauri Application
         uses: tauri-apps/tauri-action@v0
         env:
-          GITHUB_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name || 'v1.0.0' }}
-          releaseName: 'Wildcat Studio ${{ github.ref_name || 'v1.0.0' }}'
-          releaseBody: |
-            ## Wildcat Studio ${{ github.ref_name || 'v1.0.0' }}
-            
-            High-performance desktop cartridge design, chamber reamer modeling, and internal cutaway telemetry suite.
-            
-            ### Available Downloads:
-            - **macOS Universal (Intel & Apple Silicon M1/M2/M3/M4)**: `.dmg`
-            - **Windows (10/11 64-bit)**: `.msi` / `.exe` installer
-            - **Linux (x86_64)**: `.deb` / `.AppImage`
-            
-            ### Included in this Release:
-            - 408 Authentic standard and wildcat cartridge presets
-            - 1000-slice Simpson rule volumetric physics engine
-            - Direct chamber reamer order generation (PTG, Manson, JGS, Clymer)
-            - 1:1 Physical Display Calibration Wizard & on-screen engineering ruler
-            - Dual Tolerance Envelope (MMC vs LMC) with clearance callouts
-            - AutoCAD DXF, QuickDESIGN QDF, QuickLOAD VOL, and STL 3D mesh export
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Wildcat Studio ${{ github.ref_name }}'
+          releaseBody: 'See release assets below for macOS (Universal - Intel & Apple Silicon), Windows, and Linux.'
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
