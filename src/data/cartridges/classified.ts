@@ -1,0 +1,37 @@
+import { CartridgeSpec } from '../../types/cartridge';
+
+export const CLASSIFIED_CARTRIDGES: Record<string, CartridgeSpec> = {
+  "little_boy_ordnance": {
+      "id": "little_boy_ordnance",
+      "name": "Little Boy (Mk I Gun-Type)",
+      "category": "Classified",
+      "standard": "Wildcat",
+      "units": "imperial",
+      "rim_type": "rimmed",
+      "rim_diameter": 3.2,
+      "rim_thickness": 0.18,
+      "extractor_diameter": 2.8,
+      "extractor_width": 0,
+      "extractor_angle": 45,
+      "base_diameter": 2.8,
+      "shoulder_start_diameter": 2.6,
+      "body_length": 9.5,
+      "shoulder_length": 0.8,
+      "shoulder_angle": 20,
+      "neck_diameter_base": 2.4,
+      "neck_diameter_mouth": 2.4,
+      "case_length": 12,
+      "web_thickness": 0.5,
+      "base_wall_thickness": 0.08,
+      "neck_wall_thickness": 0.04,
+      "primer_pocket_dia": 0.35,
+      "primer_pocket_depth": 0.2,
+      "flash_hole_dia": 0.12,
+      "bullet_diameter": 2.4,
+      "bullet_length": 7,
+      "bullet_weight_grains": 75000,
+      "coal": 17.5,
+      "seating_depth": 2.5,
+      "max_pressure_bar": 14000
+  },
+};
