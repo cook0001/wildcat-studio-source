@@ -16,8 +16,11 @@ import {
   Sparkles,
   Cpu,
   Flame,
-  Droplet
+  Droplet,
+  ExternalLink,
+  ShoppingBag
 } from 'lucide-react';
+import { openExternalLink } from '../utils/openExternal';
 
 interface UserGuideModalProps {
   isOpen: boolean;
@@ -125,6 +128,69 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({
               <li><strong>Inspect Tolerances & Reamer:</strong> Switch Tolerance Mode to <em>Dual Envelope (MMC vs LMC)</em> to verify chamber clearance, or click <em>Chamber Reamer...</em> to generate direct toolmaker orders for PTG, Manson, JGS, or Clymer.</li>
               <li><strong>Export Technical Output:</strong> Export to AutoCAD vector <kbd style={kbdStyle}>.dxf</kbd>, QuickDESIGN <kbd style={kbdStyle}>.qdf</kbd>, QuickLOAD <kbd style={kbdStyle}>.vol</kbd>, 3D printable <kbd style={kbdStyle}>.stl</kbd>, or print standard engineering drawings (<kbd style={kbdStyle}>⌘P</kbd>).</li>
             </ol>
+          </div>
+
+          <div style={{
+            background: 'rgba(0, 210, 255, 0.04)',
+            border: '1px solid rgba(0, 210, 255, 0.2)',
+            borderRadius: '6px',
+            padding: '14px',
+          }}>
+            <h4 style={{ fontSize: '13px', color: 'var(--cad-cyan)', fontWeight: 700, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <ExternalLink size={14} /> ArmoryVault & Firearms Ecosystem Integration
+            </h4>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '12px', lineHeight: 1.6, marginBottom: '10px' }}>
+              Wildcat Studio seamlessly complements the wider shooting sports and firearms management ecosystem:
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '8px', fontSize: '12px' }}>
+              <a
+                href="https://armstrader.store"
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => { e.preventDefault(); openExternalLink('https://armstrader.store'); }}
+                style={ecoCardStyle}
+              >
+                <div>
+                  <strong style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <ShoppingBag size={13} color="var(--cad-cyan)" /> ArmsTrader Store
+                  </strong>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', margin: '2px 0 0 0' }}>armstrader.store marketplace</p>
+                </div>
+                <ExternalLink size={13} color="var(--cad-cyan)" />
+              </a>
+
+              <a
+                href="https://cook0001.github.io/ArmoryVault/"
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => { e.preventDefault(); openExternalLink('https://cook0001.github.io/ArmoryVault/'); }}
+                style={ecoCardStyle}
+              >
+                <div>
+                  <strong style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <Shield size={13} color="var(--cad-cyan)" /> ArmoryVault Platform
+                  </strong>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', margin: '2px 0 0 0' }}>Firearms, ammo & gear vault</p>
+                </div>
+                <ExternalLink size={13} color="var(--cad-cyan)" />
+              </a>
+
+              <a
+                href="https://github.com/cook0001/ArmoryVault-Companion"
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => { e.preventDefault(); openExternalLink('https://github.com/cook0001/ArmoryVault-Companion'); }}
+                style={ecoCardStyle}
+              >
+                <div>
+                  <strong style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <ExternalLink size={13} color="var(--cad-cyan)" /> ArmoryVault Companion
+                  </strong>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', margin: '2px 0 0 0' }}>Mobile companion application</p>
+                </div>
+                <ExternalLink size={13} color="var(--cad-cyan)" />
+              </a>
+            </div>
           </div>
         </div>
       )
@@ -1089,3 +1155,18 @@ const actionButtonStyle: React.CSSProperties = {
   transition: 'all 0.15s ease',
   marginTop: '8px',
 };
+
+const ecoCardStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '8px 12px',
+  background: 'rgba(255, 255, 255, 0.03)',
+  borderRadius: '4px',
+  color: '#fff',
+  textDecoration: 'none',
+  border: '1px solid rgba(255, 255, 255, 0.06)',
+  transition: 'all 0.15s ease',
+  cursor: 'pointer',
+};
+

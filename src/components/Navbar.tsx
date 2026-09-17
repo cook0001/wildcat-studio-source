@@ -32,9 +32,12 @@ import {
   Eye,
   EyeOff,
   Disc,
-  SplitSquareVertical
+  SplitSquareVertical,
+  ExternalLink,
+  ShoppingBag
 } from 'lucide-react';
 import { DrawingMode } from './BlueprintCanvas';
+import { openExternalLink } from '../utils/openExternal';
 
 export type ViewMode = 'blueprint' | 'split' | 'cutaway' | 'three' | 'reamer' | 'setback';
 
@@ -966,6 +969,40 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <span>About Wildcat Studio...</span>
                   </div>
                 </div>
+
+                <div style={dividerStyle} />
+
+                <div style={{ padding: '6px 10px 4px 10px', fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  ArmoryVault Ecosystem
+                </div>
+
+                <div 
+                  id="menu-item-armstrader"
+                  style={dropdownItemStyle}
+                  onClick={() => { closeMenu(); openExternalLink('https://armstrader.store'); }}
+                  onMouseEnter={handleItemHover}
+                  onMouseLeave={handleItemLeave}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <ShoppingBag size={14} color="var(--cad-cyan)" />
+                    <span>ArmsTrader Store (armstrader.store)</span>
+                  </div>
+                  <ExternalLink size={12} opacity={0.6} />
+                </div>
+
+                <div 
+                  id="menu-item-armoryvault"
+                  style={dropdownItemStyle}
+                  onClick={() => { closeMenu(); openExternalLink('https://cook0001.github.io/ArmoryVault/'); }}
+                  onMouseEnter={handleItemHover}
+                  onMouseLeave={handleItemLeave}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Shield size={14} color="var(--cad-cyan)" />
+                    <span>ArmoryVault Platform</span>
+                  </div>
+                  <ExternalLink size={12} opacity={0.6} />
+                </div>
               </div>
             )}
           </div>
@@ -1196,6 +1233,97 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <li>Three.js solid modeler with 3D printable (<kbd>.stl</kbd>) mesh output</li>
                 <li>1000-slice Simpson rule volumetric physics engine</li>
               </ul>
+
+              <div style={{
+                background: 'rgba(0, 210, 255, 0.04)',
+                border: '1px solid rgba(0, 210, 255, 0.2)',
+                borderRadius: '6px',
+                padding: '12px',
+                marginBottom: '14px',
+              }}>
+                <div style={{ fontSize: '11px', color: 'var(--cad-cyan)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <ExternalLink size={13} /> ArmoryVault Firearms Ecosystem
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <a
+                    href="https://armstrader.store"
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => { e.preventDefault(); openExternalLink('https://armstrader.store'); }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '6px 10px',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      borderRadius: '4px',
+                      color: '#fff',
+                      fontSize: '11.5px',
+                      textDecoration: 'none',
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
+                      transition: 'all 0.15s ease',
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(0, 210, 255, 0.15)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--cad-cyan)'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255, 255, 255, 0.03)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255, 255, 255, 0.06)'; }}
+                  >
+                    <span><strong>ArmsTrader Store</strong> — Firearms, parts & accessories marketplace</span>
+                    <ExternalLink size={12} color="var(--cad-cyan)" />
+                  </a>
+
+                  <a
+                    href="https://cook0001.github.io/ArmoryVault/"
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => { e.preventDefault(); openExternalLink('https://cook0001.github.io/ArmoryVault/'); }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '6px 10px',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      borderRadius: '4px',
+                      color: '#fff',
+                      fontSize: '11.5px',
+                      textDecoration: 'none',
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
+                      transition: 'all 0.15s ease',
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(0, 210, 255, 0.15)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--cad-cyan)'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255, 255, 255, 0.03)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255, 255, 255, 0.06)'; }}
+                  >
+                    <span><strong>ArmoryVault</strong> — At-home firearms, ammo & accessories tracker</span>
+                    <ExternalLink size={12} color="var(--cad-cyan)" />
+                  </a>
+
+                  <a
+                    href="https://github.com/cook0001/ArmoryVault-Companion"
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => { e.preventDefault(); openExternalLink('https://github.com/cook0001/ArmoryVault-Companion'); }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '6px 10px',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      borderRadius: '4px',
+                      color: '#fff',
+                      fontSize: '11.5px',
+                      textDecoration: 'none',
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
+                      transition: 'all 0.15s ease',
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(0, 210, 255, 0.15)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--cad-cyan)'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255, 255, 255, 0.03)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255, 255, 255, 0.06)'; }}
+                  >
+                    <span><strong>ArmoryVault Companion</strong> — Mobile companion app</span>
+                    <ExternalLink size={12} color="var(--cad-cyan)" />
+                  </a>
+                </div>
+              </div>
 
               <div style={{
                 background: 'rgba(0, 0, 0, 0.4)',
