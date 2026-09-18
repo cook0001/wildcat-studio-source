@@ -152,18 +152,18 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({
               >
                 <div>
                   <strong style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <ShoppingBag size={13} color="var(--cad-cyan)" /> ArmsTrader Store
+                    <ShoppingBag size={13} color="var(--cad-cyan)" /> ArmsTrader
                   </strong>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', margin: '2px 0 0 0' }}>armstrader.store marketplace</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', margin: '2px 0 0 0' }}>armstrader.store tools & utilities</p>
                 </div>
                 <ExternalLink size={13} color="var(--cad-cyan)" />
               </a>
 
               <a
-                href="https://cook0001.github.io/ArmoryVault/"
+                href="https://armstrader.store/armoryvault"
                 target="_blank"
                 rel="noreferrer"
-                onClick={(e) => { e.preventDefault(); openExternalLink('https://cook0001.github.io/ArmoryVault/'); }}
+                onClick={(e) => { e.preventDefault(); openExternalLink('https://armstrader.store/armoryvault'); }}
                 style={ecoCardStyle}
               >
                 <div>

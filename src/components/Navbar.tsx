@@ -993,7 +993,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div 
                   id="menu-item-armoryvault"
                   style={dropdownItemStyle}
-                  onClick={() => { closeMenu(); openExternalLink('https://cook0001.github.io/ArmoryVault/'); }}
+                  onClick={() => { closeMenu(); openExternalLink('https://armstrader.store/armoryvault'); }}
                   onMouseEnter={handleItemHover}
                   onMouseLeave={handleItemLeave}
                 >
@@ -1267,15 +1267,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(0, 210, 255, 0.15)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--cad-cyan)'; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255, 255, 255, 0.03)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255, 255, 255, 0.06)'; }}
                   >
-                    <span><strong>ArmsTrader Store</strong> — Firearms, parts & accessories marketplace</span>
+                    <span><strong>ArmsTrader</strong> — Firearm utilities, bill of sale & tools</span>
                     <ExternalLink size={12} color="var(--cad-cyan)" />
                   </a>
 
                   <a
-                    href="https://cook0001.github.io/ArmoryVault/"
+                    href="https://armstrader.store/armoryvault"
                     target="_blank"
                     rel="noreferrer"
-                    onClick={(e) => { e.preventDefault(); openExternalLink('https://cook0001.github.io/ArmoryVault/'); }}
+                    onClick={(e) => { e.preventDefault(); openExternalLink('https://armstrader.store/armoryvault'); }}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
