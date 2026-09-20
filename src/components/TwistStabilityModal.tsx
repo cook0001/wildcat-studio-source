@@ -442,7 +442,7 @@ Status: ${result.description}`;
             </div>
           </div>
 
-          {/* QuickDESIGN Twist Reference Matrix */}
+          {/* Miller Twist Reference Matrix */}
           <div style={{ background: 'rgba(15, 20, 31, 0.5)', borderRadius: '8px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
             <div style={{ padding: '10px 14px', background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>
               BARREL TWIST STABILITY SPECTRUM FOR THIS PROJECTILE

@@ -39,6 +39,9 @@ export interface CartridgeSpec {
   max_pressure_bar: number;
   belt_diameter?: number;          // Belted cases
   belt_width?: number;             // Belted cases
+  designer?: string;               // Wildcat cartridge designer / author
+  parent_case?: string;            // Parent donor case
+  notes?: string;                  // Engineering notes / design rationale
 }
 
 export interface VolumetricResult {

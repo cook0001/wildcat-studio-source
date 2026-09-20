@@ -202,7 +202,7 @@ export const OpenCartridgeModal: React.FC<OpenCartridgeModalProps> = ({
               coal: parseFloat(tokens[8]) || 2.800,
               max_pressure_bar: parseInt(tokens[6], 10) || 4150,
               standard: 'Wildcat',
-              category: '⭐ Custom Wildcats & User Designs',
+              category: 'Custom Wildcats & User Designs',
             };
             onImportCartridge?.(imported);
             onSelectCartridge(imported);
@@ -839,9 +839,9 @@ export const OpenCartridgeModal: React.FC<OpenCartridgeModalProps> = ({
                         {isCustom && (
                           <span
                             title="Custom Wildcat saved in your persistent database"
-                            style={{ color: 'var(--cad-copper)', fontSize: '11px' }}
+                            style={{ display: 'inline-flex', alignItems: 'center' }}
                           >
-                            ⭐
+                            <Sparkles size={11} style={{ color: 'var(--cad-copper)' }} />
                           </span>
                         )}
                         <span
@@ -932,7 +932,7 @@ export const OpenCartridgeModal: React.FC<OpenCartridgeModalProps> = ({
             </div>
           </div>
 
-          {/* Right Pane: QuickDESIGN Specification Sheet & Live Preview */}
+          {/* Right Pane: Cartridge Specification Sheet & Live Preview */}
           <div
             style={{
               flex: '0 0 380px',

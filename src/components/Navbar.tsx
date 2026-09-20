@@ -34,7 +34,8 @@ import {
   Disc,
   SplitSquareVertical,
   ExternalLink,
-  ShoppingBag
+  ShoppingBag,
+  Sparkles
 } from 'lucide-react';
 import { DrawingMode } from './BlueprintCanvas';
 import { openExternalLink } from '../utils/openExternal';
@@ -43,10 +44,13 @@ export type ViewMode = 'blueprint' | 'split' | 'cutaway' | 'three' | 'reamer' | 
 
 interface NavbarProps {
   cartridge: CartridgeSpec;
-  customCartridges: Record<string, CartridgeSpec>;
-  onOpenCartridgeModal: () => void;
-  onOpenSaveModal: () => void;
+  currentPresetId?: string;
+  allPresets?: Record<string, CartridgeSpec>;
+  customCartridges?: Record<string, CartridgeSpec>;
+  onSelectCartridge?: (spec: CartridgeSpec) => void;
   onDeleteCustomCartridge?: (id: string) => void;
+  onOpenSaveModal: () => void;
+  onOpenCartridgeModal: () => void;
   onOpenWildcatWizard: () => void;
   onOpenCompareModal: () => void;
   onOpenPrintSheet: () => void;
@@ -70,6 +74,8 @@ interface NavbarProps {
   onToggleUnits: () => void;
   isOneToOne: boolean;
   onToggleOneToOne: () => void;
+  onExportWildcat?: () => void;
+  onExportLoadBench?: () => void;
   onExportQuickload: () => void;
   onExportDxf: () => void;
   onExportStl: () => void;
@@ -93,7 +99,7 @@ type MenuType = 'file' | 'edit' | 'view' | 'tools' | 'settings' | null;
 
 export const Navbar: React.FC<NavbarProps> = ({
   cartridge,
-  customCartridges,
+  customCartridges = {},
   onOpenCartridgeModal,
   onOpenSaveModal,
   onDeleteCustomCartridge,
@@ -120,6 +126,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleUnits,
   isOneToOne,
   onToggleOneToOne,
+  onExportWildcat,
+  onExportLoadBench,
   onExportQuickload,
   onExportDxf,
   onExportStl,
@@ -290,15 +298,41 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div style={dividerStyle} />
 
                 <div 
-                  id="menu-item-export-quickload-qdf"
+                  id="menu-item-export-wildcat"
+                  style={dropdownItemStyle}
+                  onClick={() => { closeMenu(); onExportWildcat?.(); }}
+                  onMouseEnter={handleItemHover}
+                  onMouseLeave={handleItemLeave}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Share2 size={14} color="var(--cad-copper)" />
+                    <span>Export Wildcat Studio Spec (.wildcat / .wcs)</span>
+                  </div>
+                </div>
+
+                <div 
+                  id="menu-item-export-loadbench"
+                  style={dropdownItemStyle}
+                  onClick={() => { closeMenu(); onExportLoadBench?.(); }}
+                  onMouseEnter={handleItemHover}
+                  onMouseLeave={handleItemLeave}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FileText size={14} color="#3fb950" />
+                    <span>Export LoadBench Project Recipe (.loadbench)</span>
+                  </div>
+                </div>
+
+                <div 
+                  id="menu-item-export-universal-qdf"
                   style={dropdownItemStyle}
                   onClick={() => { closeMenu(); onExportQuickLoadQdf?.(); }}
                   onMouseEnter={handleItemHover}
                   onMouseLeave={handleItemLeave}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <FileText size={14} color="#3fb950" />
-                    <span>Export QuickLOAD Data File (.qdf / .dat)</span>
+                    <FileText size={14} color="var(--cad-cyan)" />
+                    <span>Export Universal Cartridge Data (.qdf / .dat)</span>
                   </div>
                 </div>
 
@@ -309,8 +343,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onMouseLeave={handleItemLeave}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <FileText size={14} color="var(--cad-cyan)" />
-                    <span>Export QuickLOAD Legacy (.vol)</span>
+                    <FileText size={14} color="var(--text-secondary)" />
+                    <span>Export Volumetric Capacity (.vol)</span>
                   </div>
                 </div>
 
@@ -546,9 +580,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                 <div style={dividerStyle} />
 
-                {/* --- QuickDESIGN Drawing Formats --- */}
+                {/* --- Cartridge Drawing Formats --- */}
                 <div style={{ padding: '4px 10px 2px', fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Drawing Formats (QuickDESIGN)
+                  Cartridge Drawing Formats
                 </div>
 
                 {[
@@ -762,7 +796,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </div>
 
-          {/* --- TOOLS MENU (QuickDESIGN Parity Suite) --- */}
+          {/* --- TOOLS MENU (Wildcat Engineering Suite) --- */}
           <div style={{ position: 'relative' }}>
             <button
               id="menu-btn-tools"
@@ -1045,9 +1079,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           maxWidth: '240px',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap'
+          whiteSpace: 'nowrap',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '4px'
         }}>
-          {customCartridges[cartridge.id] ? '⭐ ' : ''}{cartridge.name}
+          {customCartridges[cartridge.id] && <Sparkles size={11} style={{ color: 'var(--cad-copper)' }} />}
+          <span>{cartridge.name}</span>
         </span>
         <span style={{
           fontSize: '9px',

@@ -2,10 +2,14 @@
   "name": "wildcat-studio",
   "private": true,
   "version": "1.0.0",
+  "description": "Wildcat Studio — High-Performance Cartridge CAD, Chamber Reamer Modeling & Internal Cutaway Telemetry Suite",
+  "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "typecheck": "tsc --noEmit",
+    "qc": "npm run build",
     "preview": "vite preview",
     "tauri": "tauri"
   },

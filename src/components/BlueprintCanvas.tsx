@@ -150,7 +150,7 @@ export const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
     }
   }, [rotation, onRotationChange]);
 
-  // QuickDESIGN Drawing Mode & Visibility Layers State
+  // CAD Drawing Mode & Visibility Layers State
   const [internalDrawingMode, setInternalDrawingMode] = useState<DrawingMode>(mode === 'cutaway' ? 'cutaway' : 'outline');
   const [internalShowChamber, setInternalShowChamber] = useState<boolean>(false);
   const [internalShowDimensions, setInternalShowDimensions] = useState<boolean>(true);
@@ -173,7 +173,7 @@ export const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
   const activeShowBullet = propShowBullet !== undefined ? propShowBullet : internalShowBullet;
   const activeShowGrid = propShowGrid !== undefined ? propShowGrid : internalShowGrid;
 
-  // QuickDESIGN Dual Standard Drafting (SAAMI vs C.I.P.) & Manufacturing Tolerance Mode
+  // Dual Standard Drafting (SAAMI vs C.I.P.) & Manufacturing Tolerance Mode
   const [internalStandard, setInternalStandard] = useState<DraftingStandard>('saami');
   const [internalTolerance, setInternalTolerance] = useState<ToleranceDisplayMode>('nominal');
 
@@ -800,7 +800,7 @@ export const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
     ghostBulletPath = `M ${ghostZMouth} ${centerY - gRBullet} L ${ghostZTip} ${centerY} L ${ghostZMouth} ${centerY + gRBullet} Z`;
   }
 
-  // QuickDESIGN Wildcat Geometric Coupling Constraints
+  // Wildcat Geometric Coupling Constraints
   const [lockCaseLengthOnBodyChange, setLockCaseLengthOnBodyChange] = useState<boolean>(true);
   const [preserveNeckWallOnBulletChange, setPreserveNeckWallOnBulletChange] = useState<boolean>(true);
   const [selectedCaliberCategoryFilter, setSelectedCaliberCategoryFilter] = useState<string>('All');
@@ -943,7 +943,7 @@ export const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
       [editingDim.key]: inches,
     };
 
-    // Geometric Constraint Coupling (QuickDESIGN CAD Solver)
+    // Geometric Constraint Coupling (Wildcat Studio CAD Solver)
     if (editingDim.key === 'shoulder_angle') {
       if (inches > 0.5) {
         const neckBase = updated.neck_diameter_base || updated.neck_diameter_mouth;
@@ -1167,10 +1167,10 @@ export const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
         cursor: isDragging ? 'grabbing' : 'grab',
       }}
     >
-      {/* QuickDESIGN Drawing Mode & Layer Pill Bar (Top-Left, Collapsible with Dropdowns) */}
+      {/* CAD Drawing Mode & Layer Pill Bar (Top-Left, Collapsible with Dropdowns) */}
       {isToolbarCollapsed ? (
         <div
-          id="quickdesign-mode-toolbar-collapsed"
+          id="cad-mode-toolbar-collapsed"
           style={{
             position: 'absolute',
             top: '16px',
@@ -1215,7 +1215,7 @@ export const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
       ) : (
         <div
           ref={toolbarRef}
-          id="quickdesign-mode-toolbar"
+          id="cad-mode-toolbar"
           style={{
             position: 'absolute',
             top: '16px',
@@ -1590,7 +1590,7 @@ export const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
           {/* Separator */}
           <div style={{ width: '1px', height: '16px', background: 'var(--border-color)', margin: '0 2px' }} />
 
-          {/* QuickDESIGN Dual Standard Pill (SAAMI vs CIP) */}
+          {/* Dual Standard Pill (SAAMI vs CIP) */}
           <div
             style={{
               display: 'flex',
@@ -1642,7 +1642,7 @@ export const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
           {/* Separator */}
           <div style={{ width: '1px', height: '16px', background: 'var(--border-color)', margin: '0 2px' }} />
 
-          {/* QuickDESIGN Manufacturing Tolerance Selector Dropdown */}
+          {/* Manufacturing Tolerance Selector Dropdown */}
           <div style={{ position: 'relative' }}>
             {(() => {
               const currentTol = TOL_ITEMS.find((t) => t.id === activeTolerance) || TOL_ITEMS[0];
@@ -2345,7 +2345,7 @@ export const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
         </>
       )}
 
-      {/* FLOATING IN-DIAGRAM PRECISION DIMENSION EDITOR - QuickDESIGN CAD Suite */}
+      {/* FLOATING IN-DIAGRAM PRECISION DIMENSION EDITOR - Wildcat Studio CAD Suite */}
       {editingDim && (() => {
         const tolInfo = getDimToleranceInfo(editingDim.key, editingDim.initialValInches, editingDim.isAngle);
         const preset = CARTRIDGE_PRESETS[cartridge.id];
@@ -2366,7 +2366,7 @@ export const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
         const isDifferentFromInitial = Math.abs(editingDim.displayVal - initialDisplay) > 0.0001;
         const isDifferentFromPreset = presetDisplay !== undefined && Math.abs(editingDim.displayVal - presetDisplay) > 0.0001;
 
-        // QuickDESIGN Reamer & Clearance Telemetry
+        // Chamber Reamer & Clearance Telemetry
         const reamer = calculateReamerSpecs(cartridge);
         let chamberClearanceInches: number | null = null;
         let reamerChamberVal: number | null = null;
@@ -2402,7 +2402,7 @@ export const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
           clearanceFeatureLabel = 'Freebore Leade Diametral Clearance';
         }
 
-        // QuickDESIGN Live Volumetric Telemetry
+        // Live Volumetric Telemetry
         const currentVol = calculateVolumetrics(cartridge);
         const initialCartridge = {
           ...cartridge,
@@ -2539,7 +2539,7 @@ export const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
               gap: '7px',
               paddingRight: '2px'
             }}>
-              {/* QuickDESIGN Tolerance Standard & Direct Limit Jumping (LMC / Nominal / MMC) */}
+              {/* Tolerance Standard & Direct Limit Jumping (LMC / Nominal / MMC) */}
               <div style={{
                 background: 'rgba(0, 0, 0, 0.35)',
                 border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -2754,7 +2754,7 @@ export const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
                 </div>
               </div>
 
-              {/* QuickDESIGN Multi-Tier Steppers */}
+              {/* Precision Multi-Tier Steppers */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                 <div style={{ fontSize: '8.5px', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.4px' }}>
                   PRECISION MACHINING STEPPERS:
@@ -2831,7 +2831,7 @@ export const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
                 </div>
               </div>
 
-              {/* QuickDESIGN Live Engineering Telemetry (Volumetric & Chamber Fit) */}
+              {/* Live Engineering Telemetry (Volumetric & Chamber Fit) */}
               <div style={{
                 background: 'rgba(0, 210, 255, 0.04)',
                 border: '1px solid rgba(0, 210, 255, 0.18)',
@@ -2924,7 +2924,7 @@ export const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
                 )}
               </div>
 
-              {/* QuickDESIGN Wildcat Geometric Coupling Controls */}
+              {/* Wildcat Geometric Coupling Controls */}
               {editingDim.key === 'body_length' && (
                 <div style={{
                   background: 'rgba(255, 255, 255, 0.03)',
@@ -4595,7 +4595,7 @@ export const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
                 </g>
               )}
 
-              {/* Body Length (L1) Callout - QuickDESIGN Primary Shoulder Datum */}
+              {/* Body Length (L1) Callout - Primary Shoulder Datum */}
               {!isStraightWall(cartridge) && (
                 <g>
                   <line x1={originX} y1={centerY + rRim + 28} x2={originX} y2={centerY + rRim + 50} stroke="#485466" strokeWidth="0.8" />

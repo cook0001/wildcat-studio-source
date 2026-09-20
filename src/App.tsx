@@ -1,6 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
 import { CartridgeSpec, CARTRIDGE_PRESETS, VolumetricResult, DraftingStandard, ToleranceDisplayMode } from './types/cartridge';
-import { calculateVolumetricsFrontend, exportQuickLoadQDF } from './utils/volumetrics';
+import { 
+  calculateVolumetricsFrontend, 
+  exportQuickLoadQDF,
+  exportWildcatSpec,
+  exportLoadBenchRecipe
+} from './utils/volumetrics';
 import { loadCustomCartridges, saveCustomCartridge, deleteCustomCartridge } from './utils/customCartridges';
 import { useHistory } from './utils/useHistory';
 import { Navbar, ViewMode } from './components/Navbar';
@@ -164,6 +169,32 @@ export function App() {
     }
   };
 
+  const handleExportWildcat = () => {
+    const jsonText = exportWildcatSpec(cartridge);
+    const blob = new Blob([jsonText], { type: 'application/vnd.wildcatstudio.cartridge+json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${cartridge.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.wildcat`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportLoadBench = () => {
+    const jsonText = exportLoadBenchRecipe(cartridge);
+    const blob = new Blob([jsonText], { type: 'application/vnd.loadbench.recipe+json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${cartridge.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.loadbench`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const handleExportQuickload = () => {
     const volContent = `${cartridge.name}\n${volumetrics.overflow_capacity_grains_h2o.toFixed(2)}\n${cartridge.bullet_diameter.toFixed(4)}\n${cartridge.case_length.toFixed(4)}\n${cartridge.coal.toFixed(4)}`;
     const blob = new Blob([volContent], { type: 'text/plain;charset=utf-8' });
@@ -263,6 +294,8 @@ export function App() {
         onToggleUnits={() => setIsMetric(!isMetric)}
         isOneToOne={isOneToOne}
         onToggleOneToOne={() => setIsOneToOne(!isOneToOne)}
+        onExportWildcat={handleExportWildcat}
+        onExportLoadBench={handleExportLoadBench}
         onExportQuickload={handleExportQuickload}
         onExportQuickLoadQdf={handleExportQuickLoadQdf}
         onExportDxf={handleExportDxf}
@@ -498,7 +531,7 @@ export function App() {
         isMetric={isMetric}
       />
 
-      {/* QuickDESIGN-Style Open Cartridge Modal */}
+      {/* Encyclopedic Cartridge Database Browser Modal */}
       <OpenCartridgeModal
         isOpen={isOpenCartridgeModalOpen}
         onClose={() => setIsOpenCartridgeModalOpen(false)}
@@ -545,7 +578,7 @@ export function App() {
         isMetric={isMetric}
       />
 
-      {/* QuickDESIGN Headspace Gauge Suite (GO/NO-GO/FIELD) */}
+      {/* Headspace Gauge Suite (GO/NO-GO/FIELD) */}
       <HeadspaceModal
         isOpen={isHeadspaceModalOpen}
         onClose={() => setIsHeadspaceModalOpen(false)}
@@ -553,7 +586,7 @@ export function App() {
         isMetric={isMetric}
       />
 
-      {/* QuickDESIGN Miller Twist & Bullet Stability Calculator */}
+      {/* Miller Twist & Bullet Stability Calculator */}
       <TwistStabilityModal
         isOpen={isTwistModalOpen}
         onClose={() => setIsTwistModalOpen(false)}

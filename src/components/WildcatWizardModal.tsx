@@ -530,7 +530,7 @@ export const WildcatWizardModal: React.FC<WildcatWizardModalProps> = ({
               />
             </div>
 
-            {/* QuickDESIGN Case Forming & Doughnut Risk Engine */}
+            {/* Case Forming & Doughnut Risk Engine */}
             <div
               style={{
                 background:

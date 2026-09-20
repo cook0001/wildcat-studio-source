@@ -5,7 +5,7 @@ use geometry::cartridge::{CartridgeSpec, ReamerSpec, SetbackResult, VolumetricRe
 use geometry::volumetrics::calculate_volumetrics;
 use geometry::reamer::generate_reamer_spec;
 use geometry::setback::analyze_chamber_setback;
-use formats::quickload::{export_to_quickload_vol_line, parse_quickload_vol_line};
+use formats::vol_interchange::{export_to_quickload_vol_line, parse_quickload_vol_line};
 use formats::dxf::generate_dxf_string;
 
 #[tauri::command]

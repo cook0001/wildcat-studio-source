@@ -106,7 +106,7 @@ Barrel Manufacturer:    ${barrelMaker}
 Target Projectile:      ${bulletTarget}
 Special Instructions:   ${specialNotes}
 
-Generated via Wildcat Studio CAD Suite (QuickDESIGN Compatible Tooling Form)
+Generated via Wildcat Studio CAD Suite (Chamber Tooling Reamer Form)
 Date: ${new Date().toLocaleDateString()}
 ================================================================================
     `.trim();

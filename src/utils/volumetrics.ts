@@ -531,12 +531,12 @@ function fmtInches(val: number, precision: number = 3): string {
 }
 
 /**
- * Generates official QuickLOAD / QuickDESIGN interchange text (.qdf / .dat format).
+ * Generates universal cartridge interchange text (.qdf / .dat format).
  */
-export function exportQuickLoadQDF(spec: CartridgeSpec): string {
+export function exportUniversalQDF(spec: CartridgeSpec): string {
   const vol = calculateVolumetricsFrontend(spec);
   const lines = [
-    '; QuickDESIGN / Wildcat Studio Cartridge Data Exchange',
+    '; Wildcat Studio Universal Cartridge Data Exchange',
     `; Generated: ${new Date().toISOString()}`,
     `[Cartridge]`,
     `Name="${spec.name}"`,
@@ -564,4 +564,168 @@ export function exportQuickLoadQDF(spec: CartridgeSpec): string {
     `[End]`,
   ];
   return lines.join('\n');
+}
+
+// Backward-compatible alias
+export const exportQuickLoadQDF = exportUniversalQDF;
+
+/**
+ * Generates the official Wildcat Studio Cartridge Specification (.wildcat / .wcs).
+ * MIME: application/vnd.wildcatstudio.cartridge+json
+ */
+export function exportWildcatSpec(spec: CartridgeSpec): string {
+  const vol = calculateVolumetricsFrontend(spec);
+  const reamer = calculateReamerSpecs(spec);
+  const designer =
+    spec.designer ||
+    (typeof localStorage !== 'undefined' ? localStorage.getItem('wildcat_designer_name') : '') ||
+    'Unknown Designer';
+
+  const payload = {
+    $schema: 'https://armstrader.store/schemas/wildcat-cartridge-v1.json',
+    format: 'wildcat_cartridge_specification',
+    version: '1.0.0',
+    metadata: {
+      id: spec.id,
+      name: spec.name,
+      designer,
+      parent_case: spec.parent_case || null,
+      category: spec.category,
+      standard: spec.standard,
+      units: spec.units,
+      created_at: new Date().toISOString(),
+      notes: spec.notes || '',
+    },
+    dimensions: {
+      rim_type: spec.rim_type,
+      rim_diameter_in: spec.rim_diameter,
+      rim_thickness_in: spec.rim_thickness,
+      extractor_groove_diameter_in: spec.extractor_diameter,
+      extractor_groove_width_in: spec.extractor_width,
+      extractor_angle_deg: spec.extractor_angle,
+      base_diameter_p1_in: spec.base_diameter,
+      shoulder_diameter_p2_in: spec.shoulder_start_diameter,
+      body_length_l1_in: spec.body_length,
+      shoulder_length_in: spec.shoulder_length,
+      shoulder_angle_deg: spec.shoulder_angle,
+      neck_diameter_base_h1_in: spec.neck_diameter_base,
+      neck_diameter_mouth_h2_in: spec.neck_diameter_mouth,
+      case_length_l3_in: spec.case_length,
+      coal_l6_in: spec.coal,
+      bullet_diameter_g1_in: spec.bullet_diameter,
+      bullet_length_in: spec.bullet_length,
+      bullet_weight_grains: spec.bullet_weight_grains,
+      seating_depth_in: spec.seating_depth,
+      web_thickness_in: spec.web_thickness,
+      base_wall_thickness_in: spec.base_wall_thickness,
+      neck_wall_thickness_in: spec.neck_wall_thickness,
+      primer_pocket_diameter_in: spec.primer_pocket_dia,
+      primer_pocket_depth_in: spec.primer_pocket_depth,
+      flash_hole_diameter_in: spec.flash_hole_dia,
+      belt_diameter_in: spec.belt_diameter || null,
+      belt_width_in: spec.belt_width || null,
+    },
+    volumetrics: {
+      case_capacity_grains_h2o: vol.overflow_capacity_grains_h2o,
+      case_capacity_cm3: vol.overflow_capacity_cm3,
+      bullet_displacement_grains_h2o: vol.bullet_displacement_grains_h2o,
+      usable_capacity_grains_h2o: vol.usable_capacity_grains_h2o,
+      usable_capacity_cm3: vol.usable_capacity_cm3,
+      expansion_ratio_24in: vol.expansion_ratio_24in,
+      sectional_density: vol.sectional_density,
+      g1_bc_est: vol.g1_bc_est,
+    },
+    safety_limits: {
+      max_pressure_bar: spec.max_pressure_bar,
+      max_pressure_psi: Math.round(spec.max_pressure_bar * 14.5038),
+      proof_pressure_bar: Math.round(spec.max_pressure_bar * 1.25),
+      proof_pressure_psi: Math.round(spec.max_pressure_bar * 1.25 * 14.5038),
+    },
+    tooling_and_chamber: {
+      reamer_body_diameter_in: reamer.chamber_base_dia,
+      reamer_shoulder_diameter_in: reamer.chamber_shoulder_dia,
+      reamer_neck_diameter_in: reamer.chamber_neck_dia,
+      reamer_freebore_diameter_in: reamer.freebore_dia,
+      reamer_freebore_length_in: reamer.freebore_length,
+      reamer_leade_angle_deg: reamer.leade_angle_deg,
+      neck_diametral_clearance_in: Math.round((reamer.chamber_neck_dia - spec.neck_diameter_mouth) * 10000) / 10000,
+      body_diametral_clearance_in: Math.round((reamer.chamber_base_dia - spec.base_diameter) * 10000) / 10000,
+    },
+  };
+
+  return JSON.stringify(payload, null, 2);
+}
+
+/**
+ * Generates a LoadBench Project Recipe (.loadbench / .ldb) from the active wildcat cartridge.
+ * MIME: application/vnd.loadbench.recipe+json
+ */
+export function exportLoadBenchRecipe(spec: CartridgeSpec): string {
+  const vol = calculateVolumetricsFrontend(spec);
+  const designer =
+    spec.designer ||
+    (typeof localStorage !== 'undefined' ? localStorage.getItem('wildcat_designer_name') : '') ||
+    'Unknown Reloader';
+
+  const payload = {
+    $schema: 'https://armstrader.store/schemas/loadbench-recipe-v1.json',
+    format: 'loadbench_recipe',
+    version: '1.0.0',
+    metadata: {
+      id: `lb_${spec.id}`,
+      name: `${spec.name} Initial Load Development`,
+      lot_number: 'LOT-DEV-01',
+      batch_size: 20,
+      created_at: new Date().toISOString(),
+      author: designer,
+      target_firearm: 'Custom Wildcat Chamber',
+      notes: spec.notes || 'Generated from Wildcat Studio CAD model.',
+    },
+    cartridge: {
+      name: spec.name,
+      case_capacity_grains_h2o: vol.overflow_capacity_grains_h2o,
+      coal_in: spec.coal,
+      case_length_in: spec.case_length,
+      brass_manufacturer: spec.parent_case ? `${spec.parent_case} Formed Brass` : 'Custom Brass',
+      brass_firings: 0,
+    },
+    projectile: {
+      name: `${spec.bullet_weight_grains}gr Match Target`,
+      manufacturer: 'Target Bullet',
+      weight_grains: spec.bullet_weight_grains,
+      caliber_in: spec.bullet_diameter,
+      length_in: spec.bullet_length,
+      bc_g1: vol.g1_bc_est,
+      bc_g7: Math.round((vol.g1_bc_est / 2) * 1000) / 1000,
+      cbto_in: Math.round((spec.coal - (spec.bullet_length * 0.45)) * 1000) / 1000,
+      freebore_jump_in: 0.025,
+    },
+    propellant: {
+      name: 'Generic Propellant',
+      manufacturer: 'Hodgdon',
+      charge_grains: Math.round(vol.usable_capacity_grains_h2o * 0.85 * 10) / 10,
+      powder_temperature_f: 70,
+      ba_offset_pct: 0.0,
+    },
+    primer: {
+      name: spec.primer_pocket_dia > 0.20 ? 'Large Rifle' : 'Small Rifle',
+      manufacturer: 'Federal',
+      pocket_size: spec.primer_pocket_dia > 0.20 ? 'Large Rifle' : 'Small Rifle',
+    },
+    barrel: {
+      length_in: 24.0,
+      twist_in: 8.0,
+    },
+    simulated: {
+      muzzle_velocity_fps: 2750,
+      max_pressure_psi: Math.round(spec.max_pressure_bar * 14.5038),
+      powder_burned_pct: 99.0,
+      safety_status: 'NORMAL',
+    },
+    economics: {
+      cost_per_round_usd: 0.85,
+    },
+  };
+
+  return JSON.stringify(payload, null, 2);
 }

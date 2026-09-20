@@ -12,7 +12,7 @@ This is the private source code repository for **Wildcat Studio**, the industria
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 - **Frontend CAD & GUI Layer**: React 18, TypeScript, Tailwind/Vanilla CSS, Lucide icons, Canvas 2D vector drafting engine, and WebGL lathe preview.
 - **Backend Native Core**: Rust (Tauri 2), Simpson composite 1000-slice numerical integrator, reamer tooling clearance solver, DXF/STL exporters.
@@ -24,14 +24,14 @@ This is the private source code repository for **Wildcat Studio**, the industria
 
 ---
 
-## 🔒 Security Policy & Checksums
+## Security Policy & Checksums
 
 - See [SECURITY.md](SECURITY.md) for vulnerability disclosure guidelines and security architecture.
 - Official release checksums are maintained in [SHA256SUMS.txt](SHA256SUMS.txt).
 
 ---
 
-## 🧪 Local Development & Quality Control
+## Local Development & Quality Control
 
 ```bash
 # Install frontend dependencies
@@ -48,6 +48,24 @@ npm run build
 cargo test --manifest-path src-tauri/Cargo.toml
 cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
 ```
+
+---
+
+## Precision Firearms Ecosystem
+
+Wildcat Studio is engineered as part of the unified precision ballistics and firearms management ecosystem:
+
+- **[ArmsTrader (armstrader.store)](https://armstrader.store)** — Free web tools and digital utilities suite for firearm owners (Firearm Bill of Sale Generator, Nationwide FFL Finder, Shooting Range Locator, and 50-State Gun Laws Directory). *Note: ArmsTrader is NOT a marketplace, broker, or dealer.*
+- **[ArmoryVault](https://github.com/cook0001/armoryvault)** — High-performance desktop firearm inventory, ATF compliance & vault logistics suite.
+- **[ArmoryVault Companion](https://github.com/cook0001/armoryvault-companion)** — Offline mobile firearm barcode scanner and encrypted LAN sync for Android.
+- **[LoadBench Studio](https://github.com/cook0001/loadbench)** — Industrial interior ballistics simulation, propellant combustion & chamber pressure modeling suite.
+- **[RangeStudio](https://github.com/cook0001/rangestudio)** — Precision exterior ballistics, 4th-order Runge-Kutta trajectory engine & optical reticle simulator.
+
+---
+
+## License
+
+Wildcat Studio is proprietary software provided free of charge for personal, non-commercial cartridge design and dimensional calculation under the [Wildcat Studio End User License Agreement](LICENSE). All Rights Reserved. Reverse engineering, decompilation, unauthorized redistribution, or commercial use without prior written authorization is prohibited.
 
 ---
 

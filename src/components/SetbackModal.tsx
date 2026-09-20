@@ -102,10 +102,10 @@ export const SetbackModal: React.FC<SetbackModalProps> = ({
             }}
           >
             {Object.keys(customCartridges).length > 0 && (
-              <optgroup label="⭐ MY CUSTOM WILDCATS">
+              <optgroup label="── CUSTOM WILDCATS & DESIGNS ──">
                 {Object.entries(customCartridges).map(([key, item]) => (
                   <option key={key} value={key}>
-                    ⭐ {item.name}
+                    {item.name}
                   </option>
                 ))}
               </optgroup>

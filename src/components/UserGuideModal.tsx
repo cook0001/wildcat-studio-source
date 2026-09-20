@@ -126,7 +126,7 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({
               <li><strong>Draft or Edit Dimensions:</strong> Click directly on any dimension number on the blueprint canvas to launch the numeric popover with instant ±0.001" micro-steppers.</li>
               <li><strong>Form a Wildcat:</strong> Press <kbd style={kbdStyle}>⌘W</kbd> to launch the Wildcatting Engine to neck up/down, blow out shoulders to 40° Ackley angles, or truncate body length.</li>
               <li><strong>Inspect Tolerances & Reamer:</strong> Switch Tolerance Mode to <em>Dual Envelope (MMC vs LMC)</em> to verify chamber clearance, or click <em>Chamber Reamer...</em> to generate direct toolmaker orders for PTG, Manson, JGS, or Clymer.</li>
-              <li><strong>Export Technical Output:</strong> Export to AutoCAD vector <kbd style={kbdStyle}>.dxf</kbd>, QuickDESIGN <kbd style={kbdStyle}>.qdf</kbd>, QuickLOAD <kbd style={kbdStyle}>.vol</kbd>, 3D printable <kbd style={kbdStyle}>.stl</kbd>, or print standard engineering drawings (<kbd style={kbdStyle}>⌘P</kbd>).</li>
+              <li><strong>Export Technical Output:</strong> Export to Wildcat Studio <kbd style={kbdStyle}>.wildcat</kbd>, LoadBench <kbd style={kbdStyle}>.loadbench</kbd>, AutoCAD vector <kbd style={kbdStyle}>.dxf</kbd>, universal <kbd style={kbdStyle}>.qdf</kbd>, 3D printable <kbd style={kbdStyle}>.stl</kbd>, or print standard engineering drawings (<kbd style={kbdStyle}>⌘P</kbd>).</li>
             </ol>
           </div>
 
@@ -705,7 +705,7 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({
       shortTitle: 'Technical Exports & Sheets',
       category: 'Reference',
       icon: Printer,
-      summary: 'AutoCAD DXF vector export, QuickDESIGN QDF, QuickLOAD .vol, STL 3D solid mesh, and ANSI/ISO engineering print sheets.',
+      summary: 'Wildcat Studio .wildcat, LoadBench .loadbench, AutoCAD DXF vector export, STL 3D solid mesh, and ANSI/ISO engineering print sheets.',
       content: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           <div>
@@ -719,21 +719,27 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px', fontSize: '12px' }}>
             <div style={cardStyle}>
+              <strong style={{ color: 'var(--cad-copper)' }}>Wildcat Specification (.wildcat / .wcs):</strong>
+              <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
+                Open JSON cartridge engineering specification preserving designer identity, donor case lineage, 1,000-slice Simpson capacity, and reamer clearances.
+              </p>
+            </div>
+            <div style={cardStyle}>
+              <strong style={{ color: '#3fb950' }}>LoadBench Project Recipe (.loadbench):</strong>
+              <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
+                Directly opens your wildcat design in LoadBench with auto-calculated powder capacity, starting charge ladder, and bullet specifications.
+              </p>
+            </div>
+            <div style={cardStyle}>
               <strong style={{ color: 'var(--cad-cyan)' }}>AutoCAD Vector (.dxf):</strong>
               <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
                 Precision DXF files ready for direct import into AutoCAD, SolidWorks, Autodesk Fusion 360, Mastercam, and CNC lathe turning programs.
               </p>
             </div>
             <div style={cardStyle}>
-              <strong style={{ color: 'var(--cad-cyan)' }}>QuickDESIGN File (.qdf):</strong>
+              <strong style={{ color: 'var(--cad-cyan)' }}>Universal Cartridge Data (.qdf / .dat):</strong>
               <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
-                Cleanroom interchange format compatible with Hartmut Broemel's QuickDESIGN suite.
-              </p>
-            </div>
-            <div style={cardStyle}>
-              <strong style={{ color: 'var(--cad-cyan)' }}>QuickLOAD Database (.vol):</strong>
-              <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
-                Cartridge geometry and water capacity file directly importable into QuickLOAD interior ballistics software.
+                Standard interchange format for legacy ballistics engines and universal cartridge database tools.
               </p>
             </div>
             <div style={cardStyle}>

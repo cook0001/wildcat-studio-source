@@ -1,0 +1,31 @@
+name: Feature Request
+description: Propose an idea, new cartridge geometry, or CAD tool for Wildcat Studio
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea or new drafting tool to improve **Wildcat Studio**? We welcome your proposals!
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement / Use Case
+      description: Is your feature request related to cartridge design, tooling, or volumetrics?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_solution
+    attributes:
+      label: Proposed Solution & Math Details
+      description: Describe what you would like to happen and how the CAD or mathematical solver should behave.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or workarounds you have considered?

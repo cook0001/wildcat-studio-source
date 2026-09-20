@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CartridgeSpec, CARTRIDGE_CATEGORIES } from '../types/cartridge';
 import { generateCustomCartridgeId, isCustomCartridge } from '../utils/customCartridges';
-import { BookmarkPlus, Check, X, Save } from 'lucide-react';
+import { BookmarkPlus, Check, X, Save, User } from 'lucide-react';
 
 interface SaveCartridgeModalProps {
   cartridge: CartridgeSpec;
@@ -19,7 +19,10 @@ export const SaveCartridgeModal: React.FC<SaveCartridgeModalProps> = ({
   isMetric,
 }) => {
   const [name, setName] = useState<string>('');
-  const [category, setCategory] = useState<string>('⭐ Custom Wildcats & User Designs');
+  const [category, setCategory] = useState<string>('Custom Wildcats & User Designs');
+  const [designer, setDesigner] = useState<string>(() => localStorage.getItem('wildcat_designer_name') || '');
+  const [parentCase, setParentCase] = useState<string>('');
+  const [notes, setNotes] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
@@ -28,9 +31,16 @@ export const SaveCartridgeModal: React.FC<SaveCartridgeModalProps> = ({
       } else {
         setName(`${cartridge.name} (Custom Wildcat)`);
       }
-      setCategory(cartridge.category || '⭐ Custom Wildcats & User Designs');
+      setCategory(
+        cartridge.category && !cartridge.category.includes('⭐')
+          ? cartridge.category
+          : 'Custom Wildcats & User Designs'
+      );
+      setDesigner(cartridge.designer || localStorage.getItem('wildcat_designer_name') || '');
+      setParentCase(cartridge.parent_case || '');
+      setNotes(cartridge.notes || '');
     }
-  }, [isOpen, cartridge.id, cartridge.name, cartridge.category]);
+  }, [isOpen, cartridge.id, cartridge.name, cartridge.category, cartridge.designer, cartridge.parent_case, cartridge.notes]);
 
   const isExistingCustom = isCustomCartridge(cartridge.id);
 
@@ -38,6 +48,10 @@ export const SaveCartridgeModal: React.FC<SaveCartridgeModalProps> = ({
 
   const handleSaveAsNew = () => {
     const trimmed = name.trim() || 'Custom Wildcat';
+    const trimmedDesigner = designer.trim();
+    if (trimmedDesigner) {
+      localStorage.setItem('wildcat_designer_name', trimmedDesigner);
+    }
     const newId = generateCustomCartridgeId(trimmed);
     const newCartridge: CartridgeSpec = {
       ...cartridge,
@@ -45,6 +59,9 @@ export const SaveCartridgeModal: React.FC<SaveCartridgeModalProps> = ({
       name: trimmed,
       category: category,
       standard: 'Wildcat',
+      designer: trimmedDesigner || undefined,
+      parent_case: parentCase.trim() || undefined,
+      notes: notes.trim() || undefined,
     };
     onSave(newCartridge);
     onClose();
@@ -52,11 +69,18 @@ export const SaveCartridgeModal: React.FC<SaveCartridgeModalProps> = ({
 
   const handleOverwrite = () => {
     const trimmed = name.trim() || cartridge.name;
+    const trimmedDesigner = designer.trim();
+    if (trimmedDesigner) {
+      localStorage.setItem('wildcat_designer_name', trimmedDesigner);
+    }
     const updatedCartridge: CartridgeSpec = {
       ...cartridge,
       name: trimmed,
       category: category,
       standard: 'Wildcat',
+      designer: trimmedDesigner || undefined,
+      parent_case: parentCase.trim() || undefined,
+      notes: notes.trim() || undefined,
     };
     onSave(updatedCartridge);
     onClose();
@@ -214,13 +238,116 @@ export const SaveCartridgeModal: React.FC<SaveCartridgeModalProps> = ({
                 cursor: 'pointer',
               }}
             >
-              <option value="⭐ Custom Wildcats & User Designs">⭐ Custom Wildcats & User Designs (Recommended)</option>
+              <option value="Custom Wildcats & User Designs">Custom Wildcats & User Designs (Recommended)</option>
               {CARTRIDGE_CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Designer Profile & Parent Case Row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  color: 'var(--text-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  marginBottom: '6px',
+                }}
+              >
+                <User size={12} style={{ color: 'var(--cad-cyan)' }} /> DESIGNER / AUTHOR
+              </label>
+              <input
+                id="input-save-cartridge-designer"
+                type="text"
+                value={designer}
+                onChange={(e) => setDesigner(e.target.value)}
+                placeholder="e.g. Daniel C."
+                style={{
+                  width: '100%',
+                  background: 'var(--bg-tertiary)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '6px',
+                  color: '#fff',
+                  fontSize: '12px',
+                  padding: '8px 10px',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+            <div>
+              <label
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  color: 'var(--text-secondary)',
+                  display: 'block',
+                  marginBottom: '6px',
+                }}
+              >
+                PARENT DONOR CASE
+              </label>
+              <input
+                id="input-save-cartridge-parent"
+                type="text"
+                value={parentCase}
+                onChange={(e) => setParentCase(e.target.value)}
+                placeholder="e.g. .308 Winchester, .30-06"
+                style={{
+                  width: '100%',
+                  background: 'var(--bg-tertiary)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '6px',
+                  color: '#fff',
+                  fontSize: '12px',
+                  padding: '8px 10px',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Engineering Notes Input */}
+          <div>
+            <label
+              style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                color: 'var(--text-secondary)',
+                display: 'block',
+                marginBottom: '6px',
+              }}
+            >
+              DESIGN NOTES & FORMING RATIONALE
+            </label>
+            <textarea
+              id="input-save-cartridge-notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="e.g. Necked down to 6.5mm with 30-degree shoulder angle; intended for 140gr VLD projectiles at 2,850 fps."
+              rows={2}
+              style={{
+                width: '100%',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '6px',
+                color: '#fff',
+                fontSize: '11px',
+                padding: '8px 10px',
+                outline: 'none',
+                resize: 'none',
+                boxSizing: 'border-box',
+                fontFamily: 'inherit',
+              }}
+            />
           </div>
 
           {/* Live Dimension Snapshot */}
