@@ -32,6 +32,7 @@ Current_bugs
 current_bugs
 Current_bugs.*
 *.scratch.*
+scripts/delete-unused-repos.sh
 
 # AI Agent rules & configurations
 .agents/
