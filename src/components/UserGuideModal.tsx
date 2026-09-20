@@ -18,7 +18,11 @@ import {
   Flame,
   Droplet,
   ExternalLink,
-  ShoppingBag
+  Globe,
+  Disc,
+  FileText,
+  AlertTriangle,
+  FileUp
 } from 'lucide-react';
 import { openExternalLink } from '../utils/openExternal';
 
@@ -30,6 +34,9 @@ interface UserGuideModalProps {
   onOpenReamerModal?: () => void;
   onOpenCartridgeModal?: () => void;
   onOpenPrintSheet?: () => void;
+  onOpenHeadspaceModal?: () => void;
+  onOpenTwistModal?: () => void;
+  onOpenFormingModal?: () => void;
 }
 
 interface GuideSection {
@@ -50,6 +57,9 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({
   onOpenReamerModal,
   onOpenCartridgeModal,
   onOpenPrintSheet,
+  onOpenHeadspaceModal,
+  onOpenTwistModal,
+  onOpenFormingModal,
 }) => {
   const [activeSectionId, setActiveSectionId] = useState<string>('getting-started');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -151,12 +161,44 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({
                 style={ecoCardStyle}
               >
                 <div>
-                  <strong style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <ShoppingBag size={13} color="var(--cad-cyan)" /> ArmsTrader
+                  <strong style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Globe size={13} color="var(--cad-cyan)" /> ArmsTrader (armstrader.store)
                   </strong>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', margin: '2px 0 0 0' }}>armstrader.store tools & utilities</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', margin: '2px 0 0 0' }}>Free firearms tools & web utilities suite</p>
                 </div>
                 <ExternalLink size={13} color="var(--cad-cyan)" />
+              </a>
+
+              <a
+                href="https://armstrader.store/loadbench"
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => { e.preventDefault(); openExternalLink('https://armstrader.store/loadbench'); }}
+                style={ecoCardStyle}
+              >
+                <div>
+                  <strong style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Disc size={13} color="#3fb950" /> LoadBench Ballistics
+                  </strong>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', margin: '2px 0 0 0' }}>Interior ballistics & propellant burn physics</p>
+                </div>
+                <ExternalLink size={13} color="#3fb950" />
+              </a>
+
+              <a
+                href="https://armstrader.store/rangestudio"
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => { e.preventDefault(); openExternalLink('https://armstrader.store/rangestudio'); }}
+                style={ecoCardStyle}
+              >
+                <div>
+                  <strong style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Crosshair size={13} color="#38bdf8" /> RangeStudio Telemetry
+                  </strong>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', margin: '2px 0 0 0' }}>RK4 trajectory engine & reticle DOPE cards</p>
+                </div>
+                <ExternalLink size={13} color="#38bdf8" />
               </a>
 
               <a
@@ -167,29 +209,45 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({
                 style={ecoCardStyle}
               >
                 <div>
-                  <strong style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <strong style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Shield size={13} color="var(--cad-cyan)" /> ArmoryVault Platform
                   </strong>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', margin: '2px 0 0 0' }}>Firearms, ammo & gear vault</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', margin: '2px 0 0 0' }}>Firearms, ammo & gear vault desktop</p>
                 </div>
                 <ExternalLink size={13} color="var(--cad-cyan)" />
               </a>
 
               <a
-                href="https://github.com/cook0001/ArmoryVault-Companion"
+                href="https://armstrader.store/companion"
                 target="_blank"
                 rel="noreferrer"
-                onClick={(e) => { e.preventDefault(); openExternalLink('https://github.com/cook0001/ArmoryVault-Companion'); }}
+                onClick={(e) => { e.preventDefault(); openExternalLink('https://armstrader.store/companion'); }}
                 style={ecoCardStyle}
               >
                 <div>
-                  <strong style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <strong style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <ExternalLink size={13} color="var(--cad-cyan)" /> ArmoryVault Companion
                   </strong>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', margin: '2px 0 0 0' }}>Mobile companion application</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', margin: '2px 0 0 0' }}>Mobile barcode scanner & encrypted LAN sync</p>
                 </div>
                 <ExternalLink size={13} color="var(--cad-cyan)" />
               </a>
+            </div>
+
+            <div style={{
+              marginTop: '10px',
+              padding: '8px 12px',
+              background: 'rgba(0, 0, 0, 0.3)',
+              borderRadius: '4px',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '11.5px',
+              color: 'var(--text-muted)'
+            }}>
+              <span><strong>Proprietary Freeware:</strong> Licensed for free personal and gunsmith shop use. View full legal terms in Settings &rarr; <em>Software License & Legal Terms...</em></span>
+              <FileText size={13} color="var(--cad-cyan)" />
             </div>
           </div>
         </div>
@@ -469,9 +527,87 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({
       )
     },
     {
+      id: 'twist-stability',
+      title: '6. Miller Twist & Gyroscopic Stability Spectrum (Sg)',
+      shortTitle: 'Miller Twist Stability',
+      category: 'Engineering & Physics',
+      icon: Compass,
+      summary: 'Don Miller rule stability factor (Sg), Bryan Litz spin drift formula, 5-twist comparative spectrum matrix, vector print sheets, and report export.',
+      content: (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          <div>
+            <h3 style={{ fontSize: '16px', color: '#fff', marginBottom: '8px', fontWeight: 700 }}>
+              Don Miller Gyroscopic Stability & Downrange Spin Drift
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, fontSize: '13px' }}>
+              Gyroscopic stability determines whether a bullet spun by barrel rifling remains dynamically stable and point-forward in flight. Wildcat Studio implements the modernized Don Miller twist rule, taking into account projectile mass, length, caliber diameter, twist rate, ambient temperature, and barometric pressure.
+            </p>
+          </div>
+
+          <div style={{ background: 'var(--bg-secondary)', padding: '14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <span style={{ fontSize: '12px', color: 'var(--cad-cyan)', fontWeight: 600 }}>
+                Don Miller Formula (with Environmental Correction):
+              </span>
+              <button
+                onClick={() => handleCopy("Sg = [30 * m] / [T^2 * d^3 * l * (1 + l^2)] * (P / 29.92) * ((460 + Tf) / 519)", 'miller')}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                {copiedCode === 'miller' ? <Check size={12} color="var(--cad-green)" /> : <Copy size={12} />}
+              </button>
+            </div>
+            <code>Sg = [ 30 · m ] / [ T² · d³ · l · (1 + l²) ] · (P / 29.92) · [ (460 + T_f) / 519 ]</code>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '11px', marginTop: '6px' }}>
+              where m is bullet mass in grains, T is rifling twist in calibers per turn, d is bullet diameter in inches, and l is bullet length in calibers.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px', fontSize: '12px' }}>
+            <div style={{ ...cardStyle, borderLeft: '3px solid #ef4444' }}>
+              <strong style={{ color: '#ef4444' }}>Sg &lt; 1.0 (Unstable):</strong>
+              <p style={{ color: 'var(--text-muted)', marginTop: '3px' }}>
+                Insufficient rotational inertia. Bullet will yaw violently, keyhole on paper, and tumble immediately upon exiting the muzzle.
+              </p>
+            </div>
+            <div style={{ ...cardStyle, borderLeft: '3px solid #f59e0b' }}>
+              <strong style={{ color: '#f59e0b' }}>1.0 &le; Sg &lt; 1.4 (Marginal):</strong>
+              <p style={{ color: 'var(--text-muted)', marginTop: '3px' }}>
+                Marginally stable in warm air. Suffers 3%–10% ballistic coefficient loss and risks tumbling in cold, high-density winter atmospheres.
+              </p>
+            </div>
+            <div style={{ ...cardStyle, borderLeft: '3px solid #10b981' }}>
+              <strong style={{ color: '#10b981' }}>1.5 &le; Sg &le; 2.0 (Optimal):</strong>
+              <p style={{ color: 'var(--text-muted)', marginTop: '3px' }}>
+                Match-grade precision standard. Full aerodynamic ballistic coefficient realization with optimal wind drift resistance.
+              </p>
+            </div>
+            <div style={{ ...cardStyle, borderLeft: '3px solid #38bdf8' }}>
+              <strong style={{ color: '#38bdf8' }}>Sg &gt; 2.0 (Over-Stabilized):</strong>
+              <p style={{ color: 'var(--text-muted)', marginTop: '3px' }}>
+                Highly stable. Safe for heavy solids and match bullets; thin-jacketed varmint projectiles may risk centrifugal jacket rupture at extreme RPM.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ background: 'rgba(0, 210, 255, 0.04)', padding: '12px', borderRadius: '6px', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+            <strong>Comparative Spectrum Matrix:</strong> The Miller Stability Suite automatically computes and displays stability across 5 standard twist rates simultaneously, with 1-click vector stability print sheets and text diagnostic export.
+          </div>
+
+          {onOpenTwistModal && (
+            <button
+              onClick={() => { onClose(); onOpenTwistModal(); }}
+              style={actionButtonStyle}
+            >
+              <Compass size={14} /> Open Miller Stability Suite
+            </button>
+          )}
+        </div>
+      )
+    },
+    {
       id: 'wildcatting-engine',
-      title: '6. Wildcatting & Case Forming Engine (⌘W)',
-      shortTitle: 'Wildcatting Engine',
+      title: '7. Wildcatting Wizard & Fireforming Engine (⌘W)',
+      shortTitle: 'Wildcatting Wizard',
       category: 'Tooling & Machining',
       icon: Sparkles,
       summary: 'Necking up and down caliber matrix, 40° Ackley fireforming blowout calculations, and action truncation.',
@@ -525,8 +661,72 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({
       )
     },
     {
+      id: 'case-forming',
+      title: '8. Case Forming Protocol & Donut Diagnostic Solver',
+      shortTitle: 'Case Forming Protocol',
+      category: 'Tooling & Machining',
+      icon: Wrench,
+      summary: 'Donor brass conversion, multi-step reduction dies, annealing alerts, and internal brass neck donut hazard diagnosis.',
+      content: (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          <div>
+            <h3 style={{ fontSize: '16px', color: '#fff', marginBottom: '8px', fontWeight: 700 }}>
+              Methodical Case Forming & Brass Neck Donut Diagnostics
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, fontSize: '13px' }}>
+              Forming wildcat cases from donor parent brass requires structured dimensional reduction to avoid shoulder collapse, neck buckling, or work-hardening fractures. Wildcat Studio analyzes dimensional deltas and generates a multi-stage forming sequence.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '10px', fontSize: '12px' }}>
+            <div style={cardStyle}>
+              <strong style={{ color: 'var(--cad-cyan)' }}>Stage 1: Stepped Die Reduction:</strong>
+              <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
+                When necking down more than 0.030", intermediate form dies are calculated to reduce brass stress in safe, progressive passes.
+              </p>
+            </div>
+            <div style={cardStyle}>
+              <strong style={{ color: '#f59e0b' }}>Stage 2: Stress Relief Annealing:</strong>
+              <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
+                Re-establishes brass ductility at 650°F–750°F between sizing passes to prevent split case necks and ensure uniform bullet release tension.
+              </p>
+            </div>
+            <div style={cardStyle}>
+              <strong style={{ color: '#10b981' }}>Stage 3: Fireforming Expansion:</strong>
+              <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
+                Blows shallow factory shoulders out to crisp 40° Ackley angles using light pistol powder / inert filler or starting handloads.
+              </p>
+            </div>
+          </div>
+
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.08)',
+            border: '1px solid rgba(239, 68, 68, 0.25)',
+            borderRadius: '6px',
+            padding: '14px',
+            fontSize: '12px',
+            color: 'var(--text-secondary)'
+          }}>
+            <strong style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+              <AlertTriangle size={15} color="#ef4444" /> Internal Neck "Donut" Hazard Alert:
+            </strong>
+            When pushing a shoulder back or necking down thick shoulder brass, the thicker brass migrates into the base of the neck, forming an internal ridge ("donut"). If a bullet shank is seated past this junction, it wedges against the donut, causing dangerous pressure spikes. Wildcat Studio flags donut risk and provides neck reaming / outside turning dimensions.
+          </div>
+
+          {onOpenFormingModal && (
+            <button
+              onClick={() => { onClose(); onOpenFormingModal(); }}
+              style={actionButtonStyle}
+            >
+              <Wrench size={14} /> Open Case Forming & Donut Solver
+            </button>
+          )}
+        </div>
+      )
+    },
+    {
       id: 'chamber-reamer',
-      title: '7. Chamber Reamer Design & Toolmaker Orders',
+      title: '9. Chamber Reamer Design & Toolmaker Orders',
       shortTitle: 'Chamber Reamer Orders',
       category: 'Tooling & Machining',
       icon: Wrench,
@@ -598,8 +798,67 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({
       )
     },
     {
+      id: 'headspace-gauges',
+      title: '10. Toolroom Headspace Gauges (GO / NO-GO / FIELD)',
+      shortTitle: 'Headspace Gauges',
+      category: 'Tooling & Machining',
+      icon: Disc,
+      summary: 'Chamber datum circle diameter (E1), minimum safe chamber length (GO), maximum headspace (NO-GO), field reject limits, and vector toolroom certificates.',
+      content: (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          <div>
+            <h3 style={{ fontSize: '16px', color: '#fff', marginBottom: '8px', fontWeight: 700 }}>
+              Toolroom Headspace Gauges & Chamber Safety Boundaries
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, fontSize: '13px' }}>
+              Chamber headspace is the critical axial dimension between the breech bolt face and the datum circle line on the chamber shoulder. Correct headspace ensures gas sealing, prevents case head separation, and guarantees safe extraction.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', fontSize: '12px' }}>
+            <div style={{ ...cardStyle, borderLeft: '3px solid #10b981' }}>
+              <strong style={{ color: '#10b981' }}>GO Gauge (Minimum Chamber):</strong>
+              <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
+                Corresponds to the minimum allowable chamber length. A properly barreled rifle must close smoothly and completely on a GO gauge with light bolt pressure.
+              </p>
+            </div>
+            <div style={{ ...cardStyle, borderLeft: '3px solid #f59e0b' }}>
+              <strong style={{ color: '#f59e0b' }}>NO-GO Gauge (Maximum Chambering):</strong>
+              <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
+                Cut typically +0.0040" to +0.0060" over the GO dimension. A freshly cut chamber from a gunsmith must NOT close on a NO-GO gauge.
+              </p>
+            </div>
+            <div style={{ ...cardStyle, borderLeft: '3px solid #ef4444' }}>
+              <strong style={{ color: '#ef4444' }}>FIELD Gauge (Service Rejection):</strong>
+              <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
+                Cut +0.0100" to +0.0140" over GO. Absolute maximum allowable headspace in a worn or surplus firearm. If the bolt closes on a FIELD gauge, the rifle is unsafe to fire.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ background: 'var(--bg-secondary)', padding: '14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+            <h4 style={{ fontSize: '13px', color: 'var(--cad-cyan)', fontWeight: 600, marginBottom: '6px' }}>
+              Datum Circle Diameter (E₁) & Calibration Certificates
+            </h4>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '12px', lineHeight: 1.6 }}>
+              Headspace cannot be measured on an imaginary point; it is gauged where a precision hardened steel cone intersects the shoulder at datum circle diameter ($E_1$). Wildcat Studio generates print-ready Toolroom Headspace Inspection Certificates with tolerance bands for toolmaker calibration.
+            </p>
+          </div>
+
+          {onOpenHeadspaceModal && (
+            <button
+              onClick={() => { onClose(); onOpenHeadspaceModal(); }}
+              style={actionButtonStyle}
+            >
+              <Disc size={14} /> Open Headspace Gauge Inspection Suite
+            </button>
+          )}
+        </div>
+      )
+    },
+    {
       id: 'scale-calibration',
-      title: '8. 1:1 True Physical Scale & Display Calibration',
+      title: '11. 1:1 True Physical Scale & Display Calibration',
       shortTitle: '1:1 Display Calibration',
       category: 'Tooling & Machining',
       icon: Crosshair,
@@ -656,7 +915,7 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({
     },
     {
       id: 'tolerance-envelope',
-      title: '9. Dual Tolerance Envelope Overlay (MMC vs LMC)',
+      title: '12. Dual Tolerance Envelope Overlay (MMC vs LMC)',
       shortTitle: 'Tolerance Envelope',
       category: 'Tooling & Machining',
       icon: Shield,
@@ -701,11 +960,11 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({
     },
     {
       id: 'exports-printing',
-      title: '10. Technical CAD Exports & Engineering Drawings (⌘P)',
+      title: '13. Technical CAD Exports & Engineering Drawings (⌘P)',
       shortTitle: 'Technical Exports & Sheets',
       category: 'Reference',
       icon: Printer,
-      summary: 'Wildcat Studio .wildcat, LoadBench .loadbench, AutoCAD DXF vector export, STL 3D solid mesh, and ANSI/ISO engineering print sheets.',
+      summary: 'Wildcat Studio .wildcat, LoadBench .loadbench, AutoCAD DXF vector export, STL 3D solid mesh, vector prints, and native OS print bridge.',
       content: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           <div>
@@ -752,10 +1011,10 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({
 
           <div style={{ background: 'var(--bg-secondary)', padding: '14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
             <h4 style={{ fontSize: '13px', color: '#fff', fontWeight: 600, marginBottom: '6px' }}>
-              Print-Ready Engineering Drawing Sheet (⌘P)
+              Vector Toolroom Engineering Prints & Native OS Print Bridge
             </h4>
             <p style={{ color: 'var(--text-secondary)', fontSize: '12px', lineHeight: 1.6 }}>
-              Generates an official ANSI B (11" × 17") or ISO A3 technical drawing sheet complete with projection view, title block, SAAMI dimensional table, revision block, and gunsmith tolerance notes.
+              Generates official high-contrast light-mode technical drawing sheets with projection views, title block, SAAMI dimensional table, gunsmith tolerance notes, and authentic projectile blueprint geometry (bearing shank, tangent ogive, meplat, extractor groove). In native desktop mode, sheets leverage the native Tauri OS print bridge (<code>trigger_system_print</code> and <code>trigger_system_pdf_print</code>) for flawless direct printing and Apple Preview vector PDF rendering.
             </p>
           </div>
 
@@ -771,8 +1030,59 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({
       )
     },
     {
+      id: 'file-interchange',
+      title: '14. Native File Interchange & OS Desktop Integration',
+      shortTitle: 'File Associations & Drag-Drop',
+      category: 'Reference',
+      icon: FileUp,
+      summary: 'Native macOS/Windows file associations for .wildcat, .wcs, .vol, and .loadbench; Finder double-click and window drag-and-drop loading.',
+      content: (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          <div>
+            <h3 style={{ fontSize: '16px', color: '#fff', marginBottom: '8px', fontWeight: 700 }}>
+              Operating System Integration & Ballistic File Interchange
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, fontSize: '13px' }}>
+              Wildcat Studio integrates natively with your desktop operating system's file manager and the wider precision shooting software ecosystem.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px', fontSize: '12px' }}>
+            <div style={cardStyle}>
+              <strong style={{ color: 'var(--cad-cyan)' }}>macOS & Windows File Associations:</strong>
+              <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
+                <code>.wildcat</code> and <code>.wcs</code> files are registered with the OS as official Wildcat Studio Cartridge Specifications (<code>com.wildcatstudio.cartridge</code>). Double-clicking or right-clicking "Open With" in Finder or File Explorer immediately opens the cartridge in Wildcat Studio.
+              </p>
+            </div>
+            <div style={cardStyle}>
+              <strong style={{ color: '#3fb950' }}>Cross-App Interchange with LoadBench:</strong>
+              <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
+                Wildcat Studio seamlessly opens LoadBench recipe files (<code>.loadbench</code> / <code>.ldb</code>), extracting cartridge dimensions, bullet geometry, and powder capacity automatically.
+              </p>
+            </div>
+            <div style={cardStyle}>
+              <strong style={{ color: '#f59e0b' }}>Legacy QuickLOAD (.vol) Support:</strong>
+              <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
+                Open legacy QuickLOAD cartridge volume records directly without manual conversion.
+              </p>
+            </div>
+            <div style={cardStyle}>
+              <strong style={{ color: '#a855f7' }}>Native Window Drag-and-Drop:</strong>
+              <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
+                Drag any <code>.wildcat</code>, <code>.wcs</code>, <code>.loadbench</code>, or <code>.vol</code> file from your desktop directly into the Wildcat Studio window to immediately load and render the cartridge.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ background: 'rgba(0, 210, 255, 0.04)', padding: '12px', borderRadius: '6px', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+            <strong>Cold-Start & Runtime Handling:</strong> Whether the application is already running or being launched from a cold start by double-clicking a file, native Tauri event listeners guarantee the file is queued and rendered seamlessly.
+          </div>
+        </div>
+      )
+    },
+    {
       id: 'shortcuts-reference',
-      title: '11. Keyboard Shortcuts & Gestures Reference',
+      title: '15. Keyboard Shortcuts & Gestures Reference',
       shortTitle: 'Keyboard Shortcuts',
       category: 'Reference',
       icon: Cpu,
@@ -866,6 +1176,9 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({
     onOpenReamerModal,
     onOpenCartridgeModal,
     onOpenPrintSheet,
+    onOpenHeadspaceModal,
+    onOpenTwistModal,
+    onOpenFormingModal,
     copiedCode
   ]);
 
@@ -893,6 +1206,7 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({
         position: 'fixed',
         inset: 0,
         background: 'rgba(0, 0, 0, 0.85)',
+        WebkitBackdropFilter: 'blur(10px)',
         backdropFilter: 'blur(10px)',
         display: 'flex',
         alignItems: 'center',
@@ -900,7 +1214,9 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({
         zIndex: 1100,
         padding: '24px',
       }}
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div
         style={{

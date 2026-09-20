@@ -20,6 +20,7 @@ export const ThreeViewport: React.FC<ThreeViewportProps> = ({
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const [isCutaway3D, setIsCutaway3D] = useState<boolean>(false);
+  const [cutawaySlicePct, setCutawaySlicePct] = useState<number>(50); // 50% = 90 deg quarter pie slice, 100% = 180 deg half section
   const [wireframe, setWireframe] = useState<boolean>(false);
   const [rotationSpeed, setRotationSpeed] = useState<number>(0.003);
   const [webglSupported, setWebglSupported] = useState<boolean>(true);
@@ -235,7 +236,8 @@ export const ThreeViewport: React.FC<ThreeViewportProps> = ({
     }
 
     const zOffset = -cartridge.coal / 2.0;
-    const phiLength = isCutaway3D ? Math.PI * 1.5 : Math.PI * 2.0;
+    const cutawayAngle = (Math.max(10, Math.min(100, cutawaySlicePct)) / 100) * Math.PI;
+    const phiLength = isCutaway3D ? Math.PI * 2.0 - cutawayAngle : Math.PI * 2.0;
 
     if (isLittleBoy) {
       // ================= 3D LITTLE BOY (MK-I GUN-TYPE) MODEL =================
@@ -377,7 +379,7 @@ export const ThreeViewport: React.FC<ThreeViewportProps> = ({
         casePoints.push(new THREE.Vector2(0, webZ + zOffset));
       }
 
-      // Lathe Case
+      // Lathe Case Mesh
       const caseGeo = new THREE.LatheGeometry(casePoints, 48, 0, phiLength);
       caseGeo.computeVertexNormals();
 
@@ -394,7 +396,7 @@ export const ThreeViewport: React.FC<ThreeViewportProps> = ({
       group.add(caseMesh);
       caseMeshRef.current = caseMesh;
 
-      // Bullet Geometry
+      // Seated Bullet Geometry
       const bulletPoints: THREE.Vector2[] = [];
       const zBulletBase = cartridge.coal - cartridge.bullet_length;
       const rBullet = cartridge.bullet_diameter / 2;
@@ -418,7 +420,7 @@ export const ThreeViewport: React.FC<ThreeViewportProps> = ({
 
       const copperMaterial = new THREE.MeshStandardMaterial({
         color: 0xb87333, // Gilding metal / copper jacket
-        roughness: 0.32,
+        roughness: 0.30,
         metalness: 0.88,
         wireframe,
         side: THREE.DoubleSide,
@@ -428,8 +430,90 @@ export const ThreeViewport: React.FC<ThreeViewportProps> = ({
       bulletMesh.rotation.z = Math.PI / 2;
       group.add(bulletMesh);
       bulletMeshRef.current = bulletMesh;
+
+      // Internal Cutaway Sub-Meshes: Primer Cup, Powder Column, Lead Core
+      if (isCutaway3D) {
+        // 1. Nickel-Plated Primer Cup
+        const primerPoints: THREE.Vector2[] = [];
+        const rPrimer = Math.min(cartridge.primer_pocket_dia / 2, cartridge.base_diameter / 4);
+        const pDepth = Math.min(cartridge.primer_pocket_depth, cartridge.web_thickness * 0.85);
+        primerPoints.push(new THREE.Vector2(0, zOffset));
+        primerPoints.push(new THREE.Vector2(rPrimer, zOffset));
+        primerPoints.push(new THREE.Vector2(rPrimer, zOffset + pDepth));
+        primerPoints.push(new THREE.Vector2(0, zOffset + pDepth));
+
+        const primerGeo = new THREE.LatheGeometry(primerPoints, 32, 0, phiLength);
+        primerGeo.computeVertexNormals();
+        const primerMat = new THREE.MeshStandardMaterial({
+          color: 0xd1d5db, // Nickel/silver primer
+          roughness: 0.28,
+          metalness: 0.82,
+          wireframe,
+          side: THREE.DoubleSide,
+        });
+        const primerMesh = new THREE.Mesh(primerGeo, primerMat);
+        primerMesh.rotation.z = Math.PI / 2;
+        group.add(primerMesh);
+
+        // 2. Granular Nitrocellulose Propellant Column
+        const webZ = cartridge.web_thickness;
+        const zPowderTop = Math.max(webZ + 0.02, zBulletBase);
+        if (zPowderTop > webZ) {
+          const powderPoints: THREE.Vector2[] = [];
+          powderPoints.push(new THREE.Vector2(0, webZ + zOffset));
+          const pSteps = 30;
+          for (let i = 0; i <= pSteps; i++) {
+            const z = webZ + (i / pSteps) * (zPowderTop - webZ);
+            const r = Math.max(0, getInnerRadiusAt(cartridge, z) * 0.97);
+            powderPoints.push(new THREE.Vector2(r, z + zOffset));
+          }
+          powderPoints.push(new THREE.Vector2(0, zPowderTop + zOffset));
+
+          const powderGeo = new THREE.LatheGeometry(powderPoints, 36, 0, phiLength);
+          powderGeo.computeVertexNormals();
+          const powderMat = new THREE.MeshStandardMaterial({
+            color: 0x1c232c, // Extruded graphite powder
+            roughness: 0.94,
+            metalness: 0.06,
+            wireframe,
+            side: THREE.DoubleSide,
+          });
+          const powderMesh = new THREE.Mesh(powderGeo, powderMat);
+          powderMesh.rotation.z = Math.PI / 2;
+          group.add(powderMesh);
+        }
+
+        // 3. Dense Lead Alloy Bullet Core
+        const leadPoints: THREE.Vector2[] = [];
+        const jacketThickness = 0.016;
+        const rLead = Math.max(0.01, rBullet - jacketThickness);
+        const zLeadBase = zBulletBase + 0.012;
+        leadPoints.push(new THREE.Vector2(0, zLeadBase + zOffset));
+        leadPoints.push(new THREE.Vector2(rLead, zLeadBase + zOffset));
+        leadPoints.push(new THREE.Vector2(rLead, cartridge.case_length + zOffset));
+        for (let i = 1; i <= bSteps; i++) {
+          const t = i / bSteps;
+          const z = cartridge.case_length + t * (cartridge.coal - cartridge.case_length - 0.02);
+          const r = rLead * Math.sqrt(Math.max(0, 1 - t * t * 0.95));
+          leadPoints.push(new THREE.Vector2(Math.max(0, r), z + zOffset));
+        }
+        leadPoints.push(new THREE.Vector2(0, cartridge.coal - 0.02 + zOffset));
+
+        const leadGeo = new THREE.LatheGeometry(leadPoints, 36, 0, phiLength);
+        leadGeo.computeVertexNormals();
+        const leadMat = new THREE.MeshStandardMaterial({
+          color: 0x64748b, // Dull grey lead core
+          roughness: 0.65,
+          metalness: 0.45,
+          wireframe,
+          side: THREE.DoubleSide,
+        });
+        const leadMesh = new THREE.Mesh(leadGeo, leadMat);
+        leadMesh.rotation.z = Math.PI / 2;
+        group.add(leadMesh);
+      }
     }
-  }, [cartridge, isCutaway3D, wireframe]);
+  }, [cartridge, isCutaway3D, cutawaySlicePct, wireframe]);
 
   // Sync orientation when rotation changes
   useEffect(() => {
@@ -515,6 +599,7 @@ export const ThreeViewport: React.FC<ThreeViewportProps> = ({
         alignItems: 'center',
         gap: '6px',
         background: 'rgba(18, 23, 33, 0.85)',
+        WebkitBackdropFilter: 'blur(8px)',
         backdropFilter: 'blur(8px)',
         border: '1px solid var(--border-color)',
         borderRadius: '6px',
@@ -539,6 +624,57 @@ export const ThreeViewport: React.FC<ThreeViewportProps> = ({
           <Eye size={13} />
           {isCutaway3D ? '3D Cutaway Active' : 'Solid Shell'}
         </button>
+
+        {isCutaway3D && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0 4px', borderLeft: '1px solid var(--border-color)', borderRight: '1px solid var(--border-color)' }}>
+            <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+              Slice: {Math.round((cutawaySlicePct / 100) * 180)}°
+            </span>
+            <input
+              type="range"
+              min="20"
+              max="100"
+              step="5"
+              value={cutawaySlicePct}
+              onChange={(e) => setCutawaySlicePct(Number(e.target.value))}
+              style={{
+                width: '65px',
+                height: '4px',
+                accentColor: 'var(--cad-cyan)',
+                cursor: 'pointer',
+              }}
+              title={`Cutaway slice angle: ${Math.round((cutawaySlicePct / 100) * 180)}°`}
+            />
+            <button
+              onClick={() => setCutawaySlicePct(50)}
+              style={{
+                background: cutawaySlicePct === 50 ? 'rgba(0, 210, 255, 0.2)' : 'transparent',
+                color: cutawaySlicePct === 50 ? 'var(--cad-cyan)' : 'var(--text-muted)',
+                border: 'none',
+                borderRadius: '3px',
+                fontSize: '9px',
+                padding: '2px 4px',
+                cursor: 'pointer',
+              }}
+            >
+              90°
+            </button>
+            <button
+              onClick={() => setCutawaySlicePct(100)}
+              style={{
+                background: cutawaySlicePct === 100 ? 'rgba(0, 210, 255, 0.2)' : 'transparent',
+                color: cutawaySlicePct === 100 ? 'var(--cad-cyan)' : 'var(--text-muted)',
+                border: 'none',
+                borderRadius: '3px',
+                fontSize: '9px',
+                padding: '2px 4px',
+                cursor: 'pointer',
+              }}
+            >
+              180°
+            </button>
+          </div>
+        )}
 
         <button
           onClick={() => setWireframe(!wireframe)}
@@ -669,6 +805,7 @@ export const ThreeViewport: React.FC<ThreeViewportProps> = ({
           border: '1px solid rgba(0, 210, 255, 0.4)',
           borderRadius: '8px',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.7)',
+          WebkitBackdropFilter: 'blur(8px)',
           backdropFilter: 'blur(8px)',
           padding: '12px',
           zIndex: 20,

@@ -1,11 +1,12 @@
 import { CartridgeSpec } from '../types/cartridge';
 import { calculateVolumetrics } from './volumetrics';
-import { CALIBER_PRESETS } from '../data/bullets';
+import { CALIBER_PRESETS, CaliberCategory } from '../data/bullets';
 
 export interface CaliberOption {
   inches: number;
   mm: number;
   designation: string;
+  category: CaliberCategory;
   typicalWeightGrains: number;
   typicalBulletLength: number;
   typicalSeatingDepth: number;
@@ -32,6 +33,7 @@ export const STANDARD_CALIBERS: CaliberOption[] = CALIBER_PRESETS.map(p => ({
   inches: p.inches,
   mm: p.mm,
   designation: p.designation,
+  category: p.category,
   typicalWeightGrains: p.typicalWeightGrains,
   typicalBulletLength: p.typicalBulletLength,
   typicalSeatingDepth: p.typicalSeatingDepth,

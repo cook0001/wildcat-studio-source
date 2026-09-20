@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { CartridgeSpec } from '../types/cartridge';
 import { calculateVolumetrics, calculateReamerSpecs } from '../utils/volumetrics';
+import { openStandalonePrintWindow } from '../utils/fileExport';
 import { Printer, X, FileText } from 'lucide-react';
 
 interface PrintableSheetProps {
@@ -31,7 +32,60 @@ export const PrintableSheet: React.FC<PrintableSheetProps> = ({
   };
 
   const handlePrint = () => {
-    window.print();
+    if (!printRef.current) return;
+    const sheetHtml = printRef.current.outerHTML;
+    const fullHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>${cartridge.name} - Engineering Specification Sheet</title>
+          <style>
+            @page {
+              size: letter landscape;
+              margin: 0.35in;
+            }
+            * {
+              box-sizing: border-box;
+            }
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+              background: #ffffff !important;
+              color: #0f172a !important;
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            .printable-cad-sheet {
+              width: 100% !important;
+              max-width: 100% !important;
+              height: 100vh !important;
+              max-height: 100vh !important;
+              box-shadow: none !important;
+              border: 2px solid #0f172a !important;
+              padding: 16px 20px !important;
+              margin: 0 !important;
+              display: flex !important;
+              flex-direction: column !important;
+              justify-content: space-between !important;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+            @media print {
+              .printable-cad-sheet {
+                height: 7.7in !important;
+                max-height: 7.7in !important;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          ${sheetHtml}
+        </body>
+      </html>
+    `;
+    openStandalonePrintWindow(fullHtml, `${cartridge.name} Blueprint`);
   };
 
   return (
@@ -41,6 +95,7 @@ export const PrintableSheet: React.FC<PrintableSheetProps> = ({
         inset: 0,
         zIndex: 300,
         background: 'rgba(5, 8, 14, 0.9)',
+        WebkitBackdropFilter: 'blur(16px)',
         backdropFilter: 'blur(16px)',
         display: 'flex',
         flexDirection: 'column',
@@ -48,7 +103,9 @@ export const PrintableSheet: React.FC<PrintableSheetProps> = ({
         justifyContent: 'center',
         padding: '20px'
       }}
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       {/* Action Toolbar Header */}
       <div
@@ -187,46 +244,81 @@ export const PrintableSheet: React.FC<PrintableSheetProps> = ({
               const cy = 120;
 
               const pxHead = ox;
+              const rimThick = Math.max(0.045, cartridge.rim_thickness || 0.054);
+              const extWidth = Math.max(0.035, cartridge.extractor_width || 0.042);
+              const pxRimEnd = ox + rimThick * scale;
+              const pxGrooveEnd = pxRimEnd + extWidth * scale;
               const pxBody = ox + cartridge.body_length * scale;
               const pxShoulder = ox + (cartridge.body_length + cartridge.shoulder_length) * scale;
               const pxMouth = ox + cartridge.case_length * scale;
               const pxTip = ox + cartridge.coal * scale;
 
               const rRim = (cartridge.rim_diameter / 2) * scale;
+              const rGroove = ((cartridge.extractor_diameter || (cartridge.base_diameter * 0.86)) / 2) * scale;
               const rBase = (cartridge.base_diameter / 2) * scale;
               const rShoulder = (cartridge.shoulder_start_diameter / 2) * scale;
               const rMouth = (cartridge.neck_diameter_mouth / 2) * scale;
               const rBullet = (cartridge.bullet_diameter / 2) * scale;
 
+              // Authentic Ogive Curve and Seated Shank
+              const seatedDepth = Math.max(0.20, Math.min(cartridge.seating_depth || 0.32, (cartridge.case_length - cartridge.body_length) * 1.1));
+              const pxSeatedBase = Math.max(pxShoulder, pxMouth - seatedDepth * scale);
+              const exposedBulletLen = Math.max(0.25, (cartridge.coal - cartridge.case_length));
+              const bearingLen = exposedBulletLen * 0.35;
+              const pxOgiveStart = pxMouth + bearingLen * scale;
+              const rMeplat = rBullet * 0.22;
+
+              // Extractor groove case outline
               const casePath = `
                 M ${pxHead} ${cy - rRim}
-                L ${pxHead + 6} ${cy - rRim}
-                L ${pxHead + 6} ${cy - rBase}
+                L ${pxRimEnd} ${cy - rRim}
+                L ${pxRimEnd} ${cy - rGroove}
+                L ${pxGrooveEnd} ${cy - rGroove}
+                L ${pxGrooveEnd} ${cy - rBase}
                 L ${pxBody} ${cy - rShoulder}
                 L ${pxShoulder} ${cy - rMouth}
                 L ${pxMouth} ${cy - rMouth}
                 L ${pxMouth} ${cy + rMouth}
                 L ${pxShoulder} ${cy + rMouth}
                 L ${pxBody} ${cy + rShoulder}
-                L ${pxHead + 6} ${cy + rBase}
-                L ${pxHead + 6} ${cy + rRim}
+                L ${pxGrooveEnd} ${cy + rBase}
+                L ${pxGrooveEnd} ${cy + rGroove}
+                L ${pxRimEnd} ${cy + rGroove}
+                L ${pxRimEnd} ${cy + rRim}
                 L ${pxHead} ${cy + rRim}
                 Z
               `;
 
-              const bulletPath = `
+              // Seated bullet shank inside neck (hidden contour)
+              const seatedShankPath = `
+                M ${pxSeatedBase} ${cy - rBullet}
+                L ${pxMouth} ${cy - rBullet}
+                L ${pxMouth} ${cy + rBullet}
+                L ${pxSeatedBase} ${cy + rBullet}
+                Z
+              `;
+
+              // Curved Tangent Ogive with Meplat Tip and Cylindrical Bearing Shank
+              const bulletExposedPath = `
                 M ${pxMouth} ${cy - rBullet}
-                L ${pxTip} ${cy}
+                L ${pxOgiveStart} ${cy - rBullet}
+                Q ${(pxOgiveStart + pxTip) / 2} ${cy - rBullet * 0.95}, ${pxTip} ${cy - rMeplat}
+                L ${pxTip} ${cy + rMeplat}
+                Q ${(pxOgiveStart + pxTip) / 2} ${cy + rBullet * 0.95}, ${pxOgiveStart} ${cy + rBullet}
                 L ${pxMouth} ${cy + rBullet}
                 Z
               `;
 
               return (
                 <g>
+                  {/* Seated shank inside neck (dashed line) */}
+                  <path d={seatedShankPath} fill="rgba(253, 186, 116, 0.25)" stroke="#c2410c" strokeWidth="1.2" strokeDasharray="4,2" />
+
                   {/* Case Body */}
                   <path d={casePath} fill="#e2e8f0" stroke="#0f172a" strokeWidth="1.8" />
-                  {/* Bullet */}
-                  <path d={bulletPath} fill="#fdba74" stroke="#c2410c" strokeWidth="1.8" />
+
+                  {/* Exposed Bullet Body with Ogive */}
+                  <path d={bulletExposedPath} fill="#fdba74" stroke="#c2410c" strokeWidth="1.8" />
 
                   {/* Leader Lines & Callouts */}
                   {/* Overall Length L6 */}
@@ -251,7 +343,7 @@ export const PrintableSheet: React.FC<PrintableSheetProps> = ({
                   </text>
 
                   {/* Base Dia Callout */}
-                  <text x={pxHead + 20} y={cy - rBase - 6} textAnchor="start" fontSize="10" fontWeight="700" fill="#0f172a">
+                  <text x={pxGrooveEnd + 8} y={cy - rBase - 6} textAnchor="start" fontSize="10" fontWeight="700" fill="#0f172a">
                     P₁: {fmt(cartridge.base_diameter)}
                   </text>
 
@@ -265,8 +357,9 @@ export const PrintableSheet: React.FC<PrintableSheetProps> = ({
                     H₂: {fmt(cartridge.neck_diameter_mouth)}
                   </text>
 
-                  {/* Bullet Callout */}
-                  <text x={pxTip + 10} y={cy + 4} textAnchor="start" fontSize="10" fontWeight="700" fill="#c2410c">
+                  {/* Bullet G1 Callout (Offset Above Bearing Shank with Pointer) */}
+                  <line x1={pxOgiveStart} y1={cy - rBullet} x2={pxOgiveStart} y2={cy - rBullet - 18} stroke="#c2410c" strokeWidth="0.8" />
+                  <text x={pxOgiveStart} y={cy - rBullet - 22} textAnchor="middle" fontSize="10" fontWeight="700" fill="#c2410c">
                     G₁: {fmt(cartridge.bullet_diameter)}
                   </text>
                 </g>

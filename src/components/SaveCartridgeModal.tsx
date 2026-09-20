@@ -100,6 +100,7 @@ export const SaveCartridgeModal: React.FC<SaveCartridgeModalProps> = ({
         right: 0,
         bottom: 0,
         background: 'rgba(0, 0, 0, 0.75)',
+        WebkitBackdropFilter: 'blur(8px)',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
@@ -107,7 +108,9 @@ export const SaveCartridgeModal: React.FC<SaveCartridgeModalProps> = ({
         zIndex: 1000,
         padding: '20px',
       }}
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div
         style={{

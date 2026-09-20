@@ -1,4 +1,15 @@
-import { CartridgeSpec, VolumetricResult, ReamerSpec, SetbackResult, HeadspaceGaugeSpec, StabilityResult, CaseFormingResult } from '../types/cartridge';
+import { 
+  CartridgeSpec, 
+  VolumetricResult, 
+  ReamerSpec, 
+  SetbackResult, 
+  HeadspaceGaugeSpec, 
+  StabilityResult, 
+  CaseFormingResult,
+  RimType,
+  DimensionStandard,
+  UnitSystem
+} from '../types/cartridge';
 
 export const CU_IN_TO_CM3 = 16.387064;
 export const CM3_TO_GRAINS_H2O = 15.43235835;
@@ -657,6 +668,169 @@ export function exportWildcatSpec(spec: CartridgeSpec): string {
 }
 
 /**
+ * Universal Cartridge Specification Parser
+ * Ingests Wildcat Studio specifications (.wildcat / .wcs / JSON),
+ * flat CartridgeSpec objects, LoadBench recipes (.loadbench),
+ * or QuickLOAD volumetric lines (.vol / text).
+ */
+export function parseWildcatSpec(raw: string): CartridgeSpec | null {
+  if (!raw || typeof raw !== 'string') return null;
+  const trimmed = raw.trim();
+
+  // 1. Try parsing JSON formats
+  if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+    try {
+      const data = JSON.parse(trimmed);
+
+      // Case A: Official Wildcat Studio Schema (format: 'wildcat_cartridge_specification')
+      if (data.format === 'wildcat_cartridge_specification' || (data.metadata && data.dimensions)) {
+        const meta = data.metadata || {};
+        const dims = data.dimensions || {};
+        const safety = data.safety_limits || {};
+
+        const spec: CartridgeSpec = {
+          id: meta.id || `wildcat_${Date.now()}`,
+          name: meta.name || 'Imported Wildcat',
+          category: meta.category || 'Custom Wildcats & User Designs',
+          standard: (meta.standard as DimensionStandard) || 'Wildcat',
+          units: (meta.units as UnitSystem) || 'imperial',
+          rim_type: (dims.rim_type as RimType) || 'rimless',
+          rim_diameter: dims.rim_diameter_in || dims.rim_diameter || 0.473,
+          rim_thickness: dims.rim_thickness_in || dims.rim_thickness || 0.054,
+          extractor_diameter: dims.extractor_groove_diameter_in || dims.extractor_diameter || 0.410,
+          extractor_width: dims.extractor_groove_width_in || dims.extractor_width || 0.039,
+          extractor_angle: dims.extractor_angle_deg || dims.extractor_angle || 35,
+          base_diameter: dims.base_diameter_p1_in || dims.base_diameter || 0.470,
+          shoulder_start_diameter: dims.shoulder_diameter_p2_in || dims.shoulder_start_diameter || 0.454,
+          body_length: dims.body_length_l1_in || dims.body_length || 1.560,
+          shoulder_length: dims.shoulder_length_in || dims.shoulder_length || 0.150,
+          shoulder_angle: dims.shoulder_angle_deg || dims.shoulder_angle || 20,
+          neck_diameter_base: dims.neck_diameter_base_h1_in || dims.neck_diameter_base || 0.344,
+          neck_diameter_mouth: dims.neck_diameter_mouth_h2_in || dims.neck_diameter_mouth || 0.344,
+          case_length: dims.case_length_l3_in || dims.case_length || 2.015,
+          coal: dims.coal_l6_in || dims.coal || 2.800,
+          bullet_diameter: dims.bullet_diameter_g1_in || dims.bullet_diameter || 0.308,
+          bullet_length: dims.bullet_length_in || dims.bullet_length || 1.250,
+          bullet_weight_grains: dims.bullet_weight_grains || 168,
+          seating_depth: dims.seating_depth_in || dims.seating_depth || 0.465,
+          web_thickness: dims.web_thickness_in || dims.web_thickness || 0.180,
+          base_wall_thickness: dims.base_wall_thickness_in || dims.base_wall_thickness || 0.040,
+          neck_wall_thickness: dims.neck_wall_thickness_in || dims.neck_wall_thickness || 0.015,
+          primer_pocket_dia: dims.primer_pocket_diameter_in || dims.primer_pocket_dia || 0.210,
+          primer_pocket_depth: dims.primer_pocket_depth_in || dims.primer_pocket_depth || 0.128,
+          flash_hole_dia: dims.flash_hole_diameter_in || dims.flash_hole_dia || 0.080,
+          belt_diameter: dims.belt_diameter_in || dims.belt_diameter || undefined,
+          belt_width: dims.belt_width_in || dims.belt_width || undefined,
+          max_pressure_bar: dims.max_pressure_bar || safety.max_pressure_bar || 4150,
+          designer: meta.designer,
+          parent_case: meta.parent_case,
+          notes: meta.notes,
+        };
+        return spec;
+      }
+
+      // Case B: Direct flat CartridgeSpec object
+      if (typeof data.name === 'string' && (typeof data.case_length === 'number' || typeof data.bullet_diameter === 'number')) {
+        const spec: CartridgeSpec = {
+          id: data.id || `custom_${Date.now()}`,
+          name: data.name,
+          category: data.category || 'Custom Wildcats & User Designs',
+          standard: data.standard || 'Wildcat',
+          units: data.units || 'imperial',
+          rim_type: data.rim_type || 'rimless',
+          rim_diameter: data.rim_diameter || 0.473,
+          rim_thickness: data.rim_thickness || 0.054,
+          extractor_diameter: data.extractor_diameter || 0.410,
+          extractor_width: data.extractor_width || 0.039,
+          extractor_angle: data.extractor_angle || 35,
+          base_diameter: data.base_diameter || 0.470,
+          shoulder_start_diameter: data.shoulder_start_diameter || 0.454,
+          body_length: data.body_length || 1.560,
+          shoulder_length: data.shoulder_length || 0.150,
+          shoulder_angle: data.shoulder_angle || 20,
+          neck_diameter_base: data.neck_diameter_base || 0.344,
+          neck_diameter_mouth: data.neck_diameter_mouth || 0.344,
+          case_length: data.case_length || 2.000,
+          coal: data.coal || (data.case_length ? data.case_length + 0.6 : 2.800),
+          bullet_diameter: data.bullet_diameter || 0.308,
+          bullet_length: data.bullet_length || (data.bullet_diameter ? data.bullet_diameter * 3.4 : 1.25),
+          bullet_weight_grains: data.bullet_weight_grains || 150,
+          seating_depth: data.seating_depth || 0.400,
+          web_thickness: data.web_thickness || 0.180,
+          base_wall_thickness: data.base_wall_thickness || 0.040,
+          neck_wall_thickness: data.neck_wall_thickness || 0.015,
+          primer_pocket_dia: data.primer_pocket_dia || 0.210,
+          primer_pocket_depth: data.primer_pocket_depth || 0.128,
+          flash_hole_dia: data.flash_hole_dia || 0.080,
+          belt_diameter: data.belt_diameter,
+          belt_width: data.belt_width,
+          max_pressure_bar: data.max_pressure_bar || 4150,
+          designer: data.designer,
+          parent_case: data.parent_case,
+          notes: data.notes,
+        };
+        return spec;
+      }
+
+      // Case C: LoadBench recipe (.loadbench) with embedded cartridge
+      if (data.cartridge && typeof data.cartridge === 'object') {
+        return parseWildcatSpec(JSON.stringify(data.cartridge));
+      }
+    } catch {
+      // Fall through to text parsers
+    }
+  }
+
+  // 2. Try parsing QuickLOAD .vol comma-delimited line
+  // Format: "Name",OverflowCap,CaseLen,Caliber,BoreArea,GrooveCal,MaxPress,Standard,COAL
+  const tokens = trimmed.split(',').map((t) => t.trim().replace(/^"|"$/g, ''));
+  if (tokens.length >= 7 && !isNaN(parseFloat(tokens[2])) && !isNaN(parseFloat(tokens[3]))) {
+    const caseLen = parseFloat(tokens[2]);
+    const cal = parseFloat(tokens[3]);
+    const coalVal = parseFloat(tokens[8]);
+    const press = parseInt(tokens[6], 10);
+
+    const spec: CartridgeSpec = {
+      id: `vol_${Date.now()}`,
+      name: tokens[0] || 'Imported .vol Cartridge',
+      category: 'Custom Wildcats & User Designs',
+      standard: 'Wildcat',
+      units: 'imperial',
+      rim_type: 'rimless',
+      rim_diameter: Math.round(cal * 1.53 * 1000) / 1000,
+      rim_thickness: 0.054,
+      extractor_diameter: Math.round(cal * 1.33 * 1000) / 1000,
+      extractor_width: 0.039,
+      extractor_angle: 35,
+      base_diameter: Math.round(cal * 1.52 * 1000) / 1000,
+      shoulder_start_diameter: Math.round(cal * 1.47 * 1000) / 1000,
+      body_length: Math.round(caseLen * 0.77 * 1000) / 1000,
+      shoulder_length: Math.round(caseLen * 0.08 * 1000) / 1000,
+      shoulder_angle: 20,
+      neck_diameter_base: Math.round((cal + 0.034) * 1000) / 1000,
+      neck_diameter_mouth: Math.round((cal + 0.034) * 1000) / 1000,
+      case_length: caseLen,
+      coal: isNaN(coalVal) || coalVal <= 0 ? caseLen + 0.785 : coalVal,
+      bullet_diameter: cal,
+      bullet_length: Math.round(cal * 3.4 * 100) / 100,
+      bullet_weight_grains: 150,
+      seating_depth: 0.400,
+      web_thickness: 0.180,
+      base_wall_thickness: 0.040,
+      neck_wall_thickness: 0.015,
+      primer_pocket_dia: 0.210,
+      primer_pocket_depth: 0.128,
+      flash_hole_dia: 0.080,
+      max_pressure_bar: isNaN(press) || press <= 0 ? 4150 : press,
+      notes: `Imported from QuickLOAD .vol format: ${tokens[0]}`,
+    };
+    return spec;
+  }
+
+  return null;
+}
+
+/**
  * Generates a LoadBench Project Recipe (.loadbench / .ldb) from the active wildcat cartridge.
  * MIME: application/vnd.loadbench.recipe+json
  */
@@ -695,8 +869,9 @@ export function exportLoadBenchRecipe(spec: CartridgeSpec): string {
       weight_grains: spec.bullet_weight_grains,
       caliber_in: spec.bullet_diameter,
       length_in: spec.bullet_length,
+      bearing_surface_in: Math.round(Math.max(0.1, spec.bullet_length * 0.45) * 1000) / 1000,
       bc_g1: vol.g1_bc_est,
-      bc_g7: Math.round((vol.g1_bc_est / 2) * 1000) / 1000,
+      bc_g7: Math.round((vol.g1_bc_est * 0.51) * 1000) / 1000,
       cbto_in: Math.round((spec.coal - (spec.bullet_length * 0.45)) * 1000) / 1000,
       freebore_jump_in: 0.025,
     },
@@ -706,6 +881,7 @@ export function exportLoadBenchRecipe(spec: CartridgeSpec): string {
       charge_grains: Math.round(vol.usable_capacity_grains_h2o * 0.85 * 10) / 10,
       powder_temperature_f: 70,
       ba_offset_pct: 0.0,
+      fill_capacity_pct: Math.round((vol.usable_capacity_grains_h2o / Math.max(1, vol.overflow_capacity_grains_h2o)) * 100),
     },
     primer: {
       name: spec.primer_pocket_dia > 0.20 ? 'Large Rifle' : 'Small Rifle',
@@ -719,6 +895,7 @@ export function exportLoadBenchRecipe(spec: CartridgeSpec): string {
     simulated: {
       muzzle_velocity_fps: 2750,
       max_pressure_psi: Math.round(spec.max_pressure_bar * 14.5038),
+      proof_pressure_psi: Math.round(spec.max_pressure_bar * 1.25 * 14.5038),
       powder_burned_pct: 99.0,
       safety_status: 'NORMAL',
     },
@@ -729,3 +906,113 @@ export function exportLoadBenchRecipe(spec: CartridgeSpec): string {
 
   return JSON.stringify(payload, null, 2);
 }
+
+/**
+ * Generates a RangeStudio Ballistics Profile (.rsb) for trajectory simulation.
+ * MIME: application/vnd.rangestudio.ballistics+json
+ */
+export function exportRangeStudioBallistics(spec: CartridgeSpec): string {
+  const vol = calculateVolumetricsFrontend(spec);
+  const designer =
+    spec.designer ||
+    (typeof localStorage !== 'undefined' ? localStorage.getItem('wildcat_designer_name') : '') ||
+    'Custom Ballistician';
+
+  // Estimate initial muzzle velocity based on expansion ratio, case capacity, and bullet weight
+  const estVelocity = Math.round(
+    Math.min(4200, Math.max(900, Math.sqrt((vol.usable_capacity_grains_h2o * 1000) / Math.max(15, spec.bullet_weight_grains)) * 125))
+  );
+
+  const bcG1 = vol.g1_bc_est;
+  const bcG7 = Math.round((vol.g1_bc_est * 0.51) * 1000) / 1000;
+
+  // Generate 100-yard increment trajectory table up to 1000 yards
+  const rangesYards = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
+  const trajectoryTable = rangesYards.map((rangeYds) => {
+    if (rangeYds === 0) {
+      return {
+        range_yards: 0,
+        velocity_fps: estVelocity,
+        energy_ft_lbs: Math.round((spec.bullet_weight_grains * estVelocity * estVelocity) / 450240),
+        drop_inches: -1.5,
+        drop_moa: 0.0,
+        drop_mrad: 0.0,
+        time_of_flight_ms: 0,
+        wind_drift_10mph_inches: 0.0,
+      };
+    }
+
+    const avgVelocity = estVelocity - (rangeYds * 0.55 * (0.5 / Math.max(0.15, bcG1)));
+    const velFps = Math.max(700, Math.round(avgVelocity));
+    const tofSeconds = (rangeYds * 3) / ((estVelocity + velFps) / 2);
+    const rawDropInches = 0.5 * 386.4 * (tofSeconds * tofSeconds) - 1.5;
+    const zero100Tof = 300 / ((estVelocity + (estVelocity - 55)) / 2);
+    const zero100Drop = 0.5 * 386.4 * (zero100Tof * zero100Tof) - 1.5;
+    const dropInches = rangeYds === 100 ? 0.0 : Math.round((rawDropInches - zero100Drop * (rangeYds / 100)) * 10) / 10;
+    const dropMoa = Math.round((dropInches / (rangeYds * 1.047)) * 10) / 10;
+    const dropMrad = Math.round((dropInches / (rangeYds * 0.036)) * 10) / 100;
+    const energy = Math.round((spec.bullet_weight_grains * velFps * velFps) / 450240);
+    const windDrift = Math.round((((tofSeconds * 10) / Math.max(0.2, bcG1)) * 1.2) * 10) / 10;
+
+    return {
+      range_yards: rangeYds,
+      velocity_fps: velFps,
+      energy_ft_lbs: energy,
+      drop_inches: dropInches,
+      drop_moa: dropMoa,
+      drop_mrad: dropMrad,
+      time_of_flight_ms: Math.round(tofSeconds * 1000),
+      wind_drift_10mph_inches: windDrift,
+    };
+  });
+
+  const payload = {
+    $schema: 'https://armstrader.store/schemas/rangestudio-ballistics-v1.json',
+    format: 'rangestudio_ballistics_profile',
+    version: '1.0.0',
+    metadata: {
+      id: `rsb_${spec.id}`,
+      name: `${spec.name} Long-Range Ballistics Profile`,
+      author: designer,
+      cartridge_id: spec.id,
+      cartridge_name: spec.name,
+      standard: spec.standard,
+      created_at: new Date().toISOString(),
+      notes: spec.notes || 'Exported from Wildcat Studio CAD drafting suite.',
+    },
+    atmosphere: {
+      temperature_f: 59.0,
+      pressure_inhg: 29.92,
+      altitude_ft: 0,
+      humidity_pct: 50,
+    },
+    firearm: {
+      barrel_length_in: 24.0,
+      zero_distance_yards: 100,
+      sight_height_in: 1.5,
+      twist_rate_in: Math.round(Math.max(6, (spec.bullet_diameter * spec.bullet_diameter) / 0.035) * 10) / 10,
+    },
+    projectile: {
+      name: `${spec.bullet_weight_grains}gr Precision Match`,
+      caliber_in: spec.bullet_diameter,
+      weight_grains: spec.bullet_weight_grains,
+      length_in: spec.bullet_length,
+      bearing_surface_in: Math.round(Math.max(0.1, spec.bullet_length * 0.45) * 1000) / 1000,
+      bc_g1: bcG1,
+      bc_g7: bcG7,
+      drag_model: 'G7',
+      muzzle_velocity_fps: estVelocity,
+    },
+    internal_ballistics: {
+      case_capacity_grains_h2o: vol.overflow_capacity_grains_h2o,
+      usable_capacity_grains_h2o: vol.usable_capacity_grains_h2o,
+      max_pressure_psi: Math.round(spec.max_pressure_bar * 14.5038),
+      proof_pressure_psi: Math.round(spec.max_pressure_bar * 1.25 * 14.5038),
+      expansion_ratio_24in: vol.expansion_ratio_24in,
+    },
+    trajectory: trajectoryTable,
+  };
+
+  return JSON.stringify(payload, null, 2);
+}
+

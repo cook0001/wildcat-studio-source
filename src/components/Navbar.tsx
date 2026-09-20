@@ -34,11 +34,15 @@ import {
   Disc,
   SplitSquareVertical,
   ExternalLink,
-  ShoppingBag,
+  Globe,
+  User,
   Sparkles
 } from 'lucide-react';
 import { DrawingMode } from './BlueprintCanvas';
 import { openExternalLink } from '../utils/openExternal';
+import { AboutModal } from './modals/AboutModal';
+import { LicenseModal } from './modals/LicenseModal';
+import { DesignerProfileModal } from './modals/DesignerProfileModal';
 
 export type ViewMode = 'blueprint' | 'split' | 'cutaway' | 'three' | 'reamer' | 'setback';
 
@@ -76,6 +80,7 @@ interface NavbarProps {
   onToggleOneToOne: () => void;
   onExportWildcat?: () => void;
   onExportLoadBench?: () => void;
+  onExportRangeStudio?: () => void;
   onExportQuickload: () => void;
   onExportDxf: () => void;
   onExportStl: () => void;
@@ -88,6 +93,10 @@ interface NavbarProps {
   onToggleSidebar?: () => void;
   onOpenHeadspaceModal?: () => void;
   onOpenTwistModal?: () => void;
+  onOpenFormingModal?: () => void;
+  onOpenUpdateModal?: () => void;
+  updateAvailable?: boolean;
+  updateVersion?: string;
   onExportQuickLoadQdf?: () => void;
   onOpenCalibration?: () => void;
   toleranceMode?: ToleranceDisplayMode;
@@ -128,6 +137,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleOneToOne,
   onExportWildcat,
   onExportLoadBench,
+  onExportRangeStudio,
   onExportQuickload,
   onExportDxf,
   onExportStl,
@@ -140,6 +150,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleSidebar,
   onOpenHeadspaceModal,
   onOpenTwistModal,
+  onOpenFormingModal,
+  onOpenUpdateModal,
+  updateAvailable = false,
+  updateVersion,
   onExportQuickLoadQdf,
   onOpenCalibration,
   toleranceMode,
@@ -148,6 +162,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [activeMenu, setActiveMenu] = useState<MenuType>(null);
   const [isAboutOpen, setIsAboutOpen] = useState<boolean>(false);
+  const [isLicenseOpen, setIsLicenseOpen] = useState<boolean>(false);
+  const [isDesignerModalOpen, setIsDesignerModalOpen] = useState<boolean>(false);
+  const [checkUpdatesStartup, setCheckUpdatesStartup] = useState<boolean>(() => {
+    return localStorage.getItem('wildcat_check_updates_startup') !== 'false';
+  });
   const menuBarRef = useRef<HTMLDivElement>(null);
 
   // Close menus on outside click or Escape key
@@ -161,6 +180,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       if (e.key === 'Escape') {
         setActiveMenu(null);
         setIsAboutOpen(false);
+        setIsLicenseOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -320,6 +340,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <FileText size={14} color="#3fb950" />
                     <span>Export LoadBench Project Recipe (.loadbench)</span>
+                  </div>
+                </div>
+
+                <div 
+                  id="menu-item-export-rangestudio"
+                  style={dropdownItemStyle}
+                  onClick={() => { closeMenu(); onExportRangeStudio?.(); }}
+                  onMouseEnter={handleItemHover}
+                  onMouseLeave={handleItemLeave}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FileText size={14} color="#38bdf8" />
+                    <span>Export RangeStudio Ballistics Profile (.rsb)</span>
                   </div>
                 </div>
 
@@ -863,6 +896,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
 
                 <div 
+                  id="menu-item-case-forming"
+                  style={dropdownItemStyle}
+                  onClick={() => { closeMenu(); onOpenFormingModal?.(); }}
+                  onMouseEnter={handleItemHover}
+                  onMouseLeave={handleItemLeave}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Wand2 size={14} color="#f59e0b" />
+                    <span>Case Forming & Donut Diagnostic Solver...</span>
+                  </div>
+                </div>
+
+                <div 
                   style={dropdownItemStyle}
                   onClick={() => { closeMenu(); onOpenWildcatWizard(); }}
                   onMouseEnter={handleItemHover}
@@ -990,9 +1036,58 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>F1</span>
                 </div>
 
+                <div 
+                  id="menu-item-check-updates"
+                  style={dropdownItemStyle}
+                  onClick={() => { closeMenu(); onOpenUpdateModal?.(); }}
+                  onMouseEnter={handleItemHover}
+                  onMouseLeave={handleItemLeave}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <RefreshCw size={14} color="var(--cad-cyan)" />
+                    <span>Check for Updates...</span>
+                  </div>
+                  {updateAvailable && (
+                    <span style={{ fontSize: '9px', fontWeight: 700, background: '#10b981', color: '#0a0d13', borderRadius: '3px', padding: '1px 5px' }}>
+                      NEW
+                    </span>
+                  )}
+                </div>
+
+                <div 
+                  id="menu-item-designer-profile"
+                  style={dropdownItemStyle}
+                  onClick={() => { closeMenu(); setIsDesignerModalOpen(true); }}
+                  onMouseEnter={handleItemHover}
+                  onMouseLeave={handleItemLeave}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <User size={14} color="var(--cad-cyan)" />
+                    <span>Configure Designer & Shop Profile...</span>
+                  </div>
+                </div>
+
+                <div 
+                  id="menu-item-toggle-update-check"
+                  style={dropdownItemStyle}
+                  onClick={() => {
+                    const next = !checkUpdatesStartup;
+                    setCheckUpdatesStartup(next);
+                    localStorage.setItem('wildcat_check_updates_startup', String(next));
+                  }}
+                  onMouseEnter={handleItemHover}
+                  onMouseLeave={handleItemLeave}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>Check Updates on Startup</span>
+                  </div>
+                  {checkUpdatesStartup && <Check size={14} color="var(--cad-cyan)" />}
+                </div>
+
                 <div style={dividerStyle} />
 
                 <div 
+                  id="menu-item-about-wildcat"
                   style={dropdownItemStyle}
                   onClick={() => { closeMenu(); setIsAboutOpen(true); }}
                   onMouseEnter={handleItemHover}
@@ -1001,6 +1096,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Info size={14} color="var(--cad-cyan)" />
                     <span>About Wildcat Studio...</span>
+                  </div>
+                </div>
+
+                <div 
+                  id="menu-item-license-legal"
+                  style={dropdownItemStyle}
+                  onClick={() => { closeMenu(); setIsLicenseOpen(true); }}
+                  onMouseEnter={handleItemHover}
+                  onMouseLeave={handleItemLeave}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FileText size={14} color="var(--cad-cyan)" />
+                    <span>Software License & Legal Terms...</span>
                   </div>
                 </div>
 
@@ -1018,8 +1126,36 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onMouseLeave={handleItemLeave}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <ShoppingBag size={14} color="var(--cad-cyan)" />
-                    <span>ArmsTrader Store (armstrader.store)</span>
+                    <Globe size={14} color="var(--cad-cyan)" />
+                    <span>ArmsTrader (armstrader.store)</span>
+                  </div>
+                  <ExternalLink size={12} opacity={0.6} />
+                </div>
+
+                <div 
+                  id="menu-item-loadbench-suite"
+                  style={dropdownItemStyle}
+                  onClick={() => { closeMenu(); openExternalLink('https://armstrader.store/loadbench'); }}
+                  onMouseEnter={handleItemHover}
+                  onMouseLeave={handleItemLeave}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Disc size={14} color="#3fb950" />
+                    <span>LoadBench Ballistics Suite</span>
+                  </div>
+                  <ExternalLink size={12} opacity={0.6} />
+                </div>
+
+                <div 
+                  id="menu-item-rangestudio-suite"
+                  style={dropdownItemStyle}
+                  onClick={() => { closeMenu(); openExternalLink('https://armstrader.store/rangestudio'); }}
+                  onMouseEnter={handleItemHover}
+                  onMouseLeave={handleItemLeave}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Crosshair size={14} color="#38bdf8" />
+                    <span>RangeStudio Telemetry Suite</span>
                   </div>
                   <ExternalLink size={12} opacity={0.6} />
                 </div>
@@ -1214,191 +1350,53 @@ export const Navbar: React.FC<NavbarProps> = ({
         >
           {isMetric ? 'MM' : 'IN'}
         </button>
+
+        {/* Update Available Glowing Badge */}
+        {updateAvailable && (
+          <button
+            id="btn-navbar-update-available"
+            onClick={onOpenUpdateModal}
+            style={{
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(0, 210, 255, 0.25))',
+              color: '#34d399',
+              border: '1px solid rgba(16, 185, 129, 0.5)',
+              borderRadius: '4px',
+              padding: '4px 8px',
+              fontSize: '11px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              transition: 'all 0.12s',
+              boxShadow: '0 0 10px rgba(16, 185, 129, 0.3)'
+            }}
+            title="A software update is available. Click to review release notes and install."
+          >
+            <Sparkles size={11} color="#34d399" />
+            <span>Update {updateVersion || 'Available'}</span>
+          </button>
+        )}
       </div>
 
-      {/* ABOUT DIALOG MODAL */}
-      {isAboutOpen && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.75)',
-          backdropFilter: 'blur(8px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: '#0d131f',
-            border: '1px solid rgba(0, 210, 255, 0.3)',
-            borderRadius: '8px',
-            padding: '24px',
-            width: '460px',
-            maxWidth: '90vw',
-            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 210, 255, 0.15)',
-            position: 'relative'
-          }}>
-            <button
-              onClick={() => setIsAboutOpen(false)}
-              style={{
-                position: 'absolute',
-                top: '16px',
-                right: '16px',
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--text-muted)',
-                cursor: 'pointer'
-              }}
-            >
-              <X size={18} />
-            </button>
+      {/* EXTRACTED ABOUT MODAL */}
+      <AboutModal 
+        isOpen={isAboutOpen} 
+        onClose={() => setIsAboutOpen(false)} 
+        onOpenLicense={() => {
+          setIsAboutOpen(false);
+          setIsLicenseOpen(true);
+        }}
+      />
 
-            <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#fff', marginBottom: '4px' }}>
-              Wildcat Studio
-            </h3>
-            <p style={{ fontSize: '12px', color: 'var(--cad-cyan)', fontFamily: 'var(--font-mono)', marginBottom: '16px' }}>
-              Version 1.0.0 (Cleanroom CAD Suite)
-            </p>
+      {/* EXTRACTED LICENSE & LEGAL TERMS MODAL */}
+      <LicenseModal 
+        isOpen={isLicenseOpen} 
+        onClose={() => setIsLicenseOpen(false)} 
+      />
 
-            <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '20px' }}>
-              <p style={{ marginBottom: '10px' }}>
-                High-performance desktop cartridge design, chamber reamer modeling, and internal cutaway telemetry suite.
-              </p>
-              <ul style={{ paddingLeft: '18px', listStyleType: 'disc', marginBottom: '14px' }}>
-                <li>408 Standard SAAMI, CIP, and Custom Wildcat Presets</li>
-                <li>QuickLOAD database (<kbd>.vol</kbd>) read/write support</li>
-                <li>AutoCAD vector (<kbd>.dxf</kbd>) geometry export</li>
-                <li>Three.js solid modeler with 3D printable (<kbd>.stl</kbd>) mesh output</li>
-                <li>1000-slice Simpson rule volumetric physics engine</li>
-              </ul>
-
-              <div style={{
-                background: 'rgba(0, 210, 255, 0.04)',
-                border: '1px solid rgba(0, 210, 255, 0.2)',
-                borderRadius: '6px',
-                padding: '12px',
-                marginBottom: '14px',
-              }}>
-                <div style={{ fontSize: '11px', color: 'var(--cad-cyan)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <ExternalLink size={13} /> ArmoryVault Firearms Ecosystem
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <a
-                    href="https://armstrader.store"
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={(e) => { e.preventDefault(); openExternalLink('https://armstrader.store'); }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '6px 10px',
-                      background: 'rgba(255, 255, 255, 0.03)',
-                      borderRadius: '4px',
-                      color: '#fff',
-                      fontSize: '11.5px',
-                      textDecoration: 'none',
-                      border: '1px solid rgba(255, 255, 255, 0.06)',
-                      transition: 'all 0.15s ease',
-                      cursor: 'pointer',
-                    }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(0, 210, 255, 0.15)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--cad-cyan)'; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255, 255, 255, 0.03)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255, 255, 255, 0.06)'; }}
-                  >
-                    <span><strong>ArmsTrader</strong> — Firearm utilities, bill of sale & tools</span>
-                    <ExternalLink size={12} color="var(--cad-cyan)" />
-                  </a>
-
-                  <a
-                    href="https://armstrader.store/armoryvault"
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={(e) => { e.preventDefault(); openExternalLink('https://armstrader.store/armoryvault'); }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '6px 10px',
-                      background: 'rgba(255, 255, 255, 0.03)',
-                      borderRadius: '4px',
-                      color: '#fff',
-                      fontSize: '11.5px',
-                      textDecoration: 'none',
-                      border: '1px solid rgba(255, 255, 255, 0.06)',
-                      transition: 'all 0.15s ease',
-                      cursor: 'pointer',
-                    }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(0, 210, 255, 0.15)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--cad-cyan)'; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255, 255, 255, 0.03)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255, 255, 255, 0.06)'; }}
-                  >
-                    <span><strong>ArmoryVault</strong> — At-home firearms, ammo & accessories tracker</span>
-                    <ExternalLink size={12} color="var(--cad-cyan)" />
-                  </a>
-
-                  <a
-                    href="https://github.com/cook0001/ArmoryVault-Companion"
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={(e) => { e.preventDefault(); openExternalLink('https://github.com/cook0001/ArmoryVault-Companion'); }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '6px 10px',
-                      background: 'rgba(255, 255, 255, 0.03)',
-                      borderRadius: '4px',
-                      color: '#fff',
-                      fontSize: '11.5px',
-                      textDecoration: 'none',
-                      border: '1px solid rgba(255, 255, 255, 0.06)',
-                      transition: 'all 0.15s ease',
-                      cursor: 'pointer',
-                    }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(0, 210, 255, 0.15)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--cad-cyan)'; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255, 255, 255, 0.03)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255, 255, 255, 0.06)'; }}
-                  >
-                    <span><strong>ArmoryVault Companion</strong> — Mobile companion app</span>
-                    <ExternalLink size={12} color="var(--cad-cyan)" />
-                  </a>
-                </div>
-              </div>
-
-              <div style={{
-                background: 'rgba(0, 0, 0, 0.4)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '5px',
-                padding: '10px 12px',
-                fontSize: '11px',
-                color: 'var(--text-muted)',
-                lineHeight: 1.5,
-              }}>
-                <strong style={{ color: '#fff' }}>Proprietary Freeware License:</strong>
-                <p style={{ margin: '4px 0 0 0' }}>
-                  Granted free of charge for personal and commercial firearms design. All intellectual property, mathematical algorithms, and compiled code remain the sole property of the author. Reverse-engineering, decompilation, code extraction, or redistribution of modified binaries is strictly prohibited.
-                </p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setIsAboutOpen(false)}
-                style={{
-                  background: 'var(--cad-cyan)',
-                  color: '#0a0d13',
-                  border: 'none',
-                  borderRadius: '5px',
-                  padding: '6px 16px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* DESIGNER & SHOP PROFILE MODAL */}
+      <DesignerProfileModal isOpen={isDesignerModalOpen} onClose={() => setIsDesignerModalOpen(false)} />
     </header>
   );
 };
@@ -1410,6 +1408,7 @@ const dropdownContainerStyle: React.CSSProperties = {
   left: 0,
   minWidth: '270px',
   background: 'rgba(15, 23, 42, 0.97)',
+  WebkitBackdropFilter: 'blur(16px)',
   backdropFilter: 'blur(16px)',
   border: '1px solid rgba(0, 210, 255, 0.25)',
   borderRadius: '6px',

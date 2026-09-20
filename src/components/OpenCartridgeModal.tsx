@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { CartridgeSpec, CARTRIDGE_CATEGORIES } from '../types/cartridge';
 import { isCustomCartridge } from '../utils/customCartridges';
-import { calculateVolumetricsFrontend, isStraightWall, getOuterRadiusAt } from '../utils/volumetrics';
+import { calculateVolumetricsFrontend, isStraightWall, getOuterRadiusAt, parseWildcatSpec } from '../utils/volumetrics';
 import { 
   FolderOpen, 
   Search, 
@@ -170,7 +170,7 @@ export const OpenCartridgeModal: React.FC<OpenCartridgeModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, filteredCartridges, highlightedId, highlightedCartridge, onClose, onSelectCartridge]);
 
-  // Handle external file import (.vol or .json)
+  // Handle external file import (.wildcat, .wcs, .vol, .loadbench, .json)
   const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -181,33 +181,13 @@ export const OpenCartridgeModal: React.FC<OpenCartridgeModalProps> = ({
       if (!content) return;
 
       try {
-        if (file.name.endsWith('.json')) {
-          const parsed = JSON.parse(content);
-          if (parsed && parsed.name && parsed.case_length) {
-            onImportCartridge?.(parsed);
-            onSelectCartridge(parsed);
-            onClose();
-          }
-        } else if (file.name.endsWith('.vol')) {
-          // Parse QuickLOAD .vol line
-          // Format: "Name","OverflowCap","CaseLen","Caliber","BoreArea","GrooveCal","MaxPress","Standard","COAL"
-          const tokens = content.split(',').map((t) => t.trim().replace(/^"|"$/g, ''));
-          if (tokens.length >= 7) {
-            const imported: CartridgeSpec = {
-              ...allPresets['308_win'],
-              id: `imported_${Date.now()}`,
-              name: tokens[0] || 'Imported .vol Cartridge',
-              case_length: parseFloat(tokens[2]) || 2.015,
-              bullet_diameter: parseFloat(tokens[3]) || 0.308,
-              coal: parseFloat(tokens[8]) || 2.800,
-              max_pressure_bar: parseInt(tokens[6], 10) || 4150,
-              standard: 'Wildcat',
-              category: 'Custom Wildcats & User Designs',
-            };
-            onImportCartridge?.(imported);
-            onSelectCartridge(imported);
-            onClose();
-          }
+        const parsed = parseWildcatSpec(content);
+        if (parsed) {
+          onImportCartridge?.(parsed);
+          onSelectCartridge(parsed);
+          onClose();
+        } else {
+          console.warn('Unable to parse cartridge specification format:', file.name);
         }
       } catch (err) {
         console.error('Failed to import cartridge file:', err);
@@ -431,6 +411,7 @@ export const OpenCartridgeModal: React.FC<OpenCartridgeModalProps> = ({
         right: 0,
         bottom: 0,
         background: 'rgba(0, 0, 0, 0.8)',
+        WebkitBackdropFilter: 'blur(8px)',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
@@ -438,7 +419,9 @@ export const OpenCartridgeModal: React.FC<OpenCartridgeModalProps> = ({
         zIndex: 1000,
         padding: '24px',
       }}
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div
         style={{
@@ -484,13 +467,13 @@ export const OpenCartridgeModal: React.FC<OpenCartridgeModalProps> = ({
               type="file"
               ref={fileInputRef}
               onChange={handleFileImport}
-              accept=".vol,.json"
+              accept=".wildcat,.wcs,.vol,.json,.loadbench,.ldb"
               style={{ display: 'none' }}
             />
             <button
               id="btn-import-cartridge-file"
               onClick={() => fileInputRef.current?.click()}
-              title="Import .vol or .json cartridge specification from disk"
+              title="Import .wildcat, .wcs, .vol, .loadbench, or .json cartridge specification from disk"
               style={{
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
@@ -507,7 +490,7 @@ export const OpenCartridgeModal: React.FC<OpenCartridgeModalProps> = ({
               }}
             >
               <Upload size={12} />
-              <span>Import File (.vol/.json)</span>
+              <span>Import File (.wildcat/.wcs/.vol/.json)</span>
             </button>
 
             <button

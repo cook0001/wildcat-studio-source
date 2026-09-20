@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CartridgeSpec } from '../types/cartridge';
 import { calculateHeadspaceGauges, calculateDatumHeadspace } from '../utils/volumetrics';
 import { X, Shield, AlertTriangle, CheckCircle, Copy, Check, Printer, Info, Disc } from 'lucide-react';
+import { openStandalonePrintWindow } from '../utils/fileExport';
 
 interface HeadspaceModalProps {
   isOpen: boolean;
@@ -87,6 +88,106 @@ Recommended Hardness: 60-64 HRC Ground Tool Steel`;
     },
   ];
 
+  const handlePrintGauges = () => {
+    const datum = gauges.datum_diameter;
+    const printHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>${cartridge.name} Headspace Gauge Calibration Sheet</title>
+          <style>
+            @page { size: letter landscape; margin: 0.5in; }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a; padding: 24px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            h1 { font-size: 18px; margin: 0 0 4px 0; color: #0f172a; font-weight: 800; }
+            h2 { font-size: 12px; color: #475569; margin: 0 0 16px 0; font-weight: normal; }
+            .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+            .card { border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 14px; background: #f8fafc; }
+            .card-title { font-size: 13px; font-weight: bold; margin-bottom: 2px; }
+            .card-status { font-size: 10px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; color: #0284c7; }
+            .card-dim { font-size: 20px; font-weight: 800; font-family: monospace; color: #0f172a; margin-bottom: 4px; }
+            .card-meta { font-size: 11px; color: #64748b; line-height: 1.4; }
+            table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 11px; }
+            th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; }
+            th { background: #f1f5f9; font-weight: bold; color: #334155; }
+            .footer { margin-top: 24px; border-top: 1px solid #cbd5e1; padding-top: 8px; font-size: 10px; color: #64748b; display: flex; justify-content: space-between; }
+            @media print { body { padding: 0; } }
+          </style>
+        </head>
+        <body>
+          <h1>${cartridge.name} &bull; Toolroom Headspace Gauge Inspection Sheet</h1>
+          <h2>Chamber Standard: ${cartridge.standard} &bull; Headspace Datum: ${gauges.type.toUpperCase()} &bull; Datum Diameter: ${fmt(datum)} &bull; Shoulder Angle: ${cartridge.shoulder_angle.toFixed(1)}&deg;</h2>
+          
+          <div class="grid">
+            <div class="card">
+              <div class="card-title">GO Gauge</div>
+              <div class="card-status">Minimum Safe Chamber Headspace</div>
+              <div class="card-dim">${fmt(gauges.go_gauge_inches)}</div>
+              <div class="card-meta">Baseline +0.0000" &bull; Bolt MUST close completely without binding or drag.</div>
+            </div>
+            <div class="card">
+              <div class="card-title">NO-GO Gauge</div>
+              <div class="card-status">Maximum New Chamber Limit</div>
+              <div class="card-dim">${fmt(gauges.nogo_gauge_inches)}</div>
+              <div class="card-meta">+0.0040" offset &bull; Bolt MUST NOT close on a newly cut or rechambered barrel.</div>
+            </div>
+            <div class="card">
+              <div class="card-title">FIELD Gauge</div>
+              <div class="card-status">Maximum Service Safety Limit</div>
+              <div class="card-dim">${fmt(gauges.field_gauge_inches)}</div>
+              <div class="card-meta">+0.0070" offset &bull; Bolt MUST NOT close. Closing indicates hazardous excessive headspace.</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Gauge Type</th>
+                <th>Dimension to Datum</th>
+                <th>Offset from GO</th>
+                <th>Grinding Tolerance</th>
+                <th>Material Specification</th>
+                <th>Pass / Fail Diagnostic Criterion</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>GO Gauge</strong></td>
+                <td>${fmt(gauges.go_gauge_inches)}</td>
+                <td>+0.0000" baseline</td>
+                <td>+0.0002" / -0.0000"</td>
+                <td>M2 Tool Steel, Rc 60&ndash;64 Ground</td>
+                <td>Bolt closes fully with light finger pressure on a stripped bolt.</td>
+              </tr>
+              <tr>
+                <td><strong>NO-GO Gauge</strong></td>
+                <td>${fmt(gauges.nogo_gauge_inches)}</td>
+                <td>+0.0040" (+0.102 mm)</td>
+                <td>+0.0000" / -0.0002"</td>
+                <td>M2 Tool Steel, Rc 60&ndash;64 Ground</td>
+                <td>Bolt must NOT close. If bolt rotates into lock, chamber is too deep.</td>
+              </tr>
+              <tr>
+                <td><strong>FIELD Gauge</strong></td>
+                <td>${fmt(gauges.field_gauge_inches)}</td>
+                <td>+0.0070" (+0.178 mm)</td>
+                <td>+0.0000" / -0.0002"</td>
+                <td>M2 Tool Steel, Rc 60&ndash;64 Ground</td>
+                <td>Bolt must NOT close. If bolt closes, firearm is unsafe to fire.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="footer">
+            <span>Generated by Wildcat Studio CAD &bull; Toolroom Headspace Engine</span>
+            <span>Inspection Date: ${new Date().toLocaleDateString()} &bull; Specification Standard: ANSI/SAAMI & CIP Reference</span>
+          </div>
+        </body>
+      </html>
+    `;
+    openStandalonePrintWindow(printHtml, `${cartridge.name} Headspace Gauges`);
+  };
+
   const activeG = gaugeConfigs.find((g) => g.id === selectedGauge) || gaugeConfigs[0];
 
   return (
@@ -99,9 +200,12 @@ Recommended Hardness: 60-64 HRC Ground Tool Steel`;
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: 'rgba(5, 8, 15, 0.82)',
+        WebkitBackdropFilter: 'blur(8px)',
         backdropFilter: 'blur(8px)',
       }}
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div
         style={{
@@ -404,7 +508,7 @@ Recommended Hardness: 60-64 HRC Ground Tool Steel`;
               <span>{copied ? 'Copied' : 'Copy Specs'}</span>
             </button>
             <button
-              onClick={() => window.print()}
+              onClick={handlePrintGauges}
               style={{
                 background: 'var(--cad-cyan)',
                 border: 'none',

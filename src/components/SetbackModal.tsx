@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { CartridgeSpec, CARTRIDGE_PRESETS, CARTRIDGE_CATEGORIES } from '../types/cartridge';
+import { CartridgeSpec, CARTRIDGE_PRESETS } from '../types/cartridge';
 import { analyzeSetbackFrontend, getOuterRadiusAt } from '../utils/volumetrics';
-import { Scale, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { CartridgePickerModal } from './modals/CartridgePickerModal';
+import { Scale, CheckCircle2, AlertTriangle, Search } from 'lucide-react';
 
 interface SetbackModalProps {
   currentCartridge: CartridgeSpec;
@@ -17,6 +18,7 @@ export const SetbackModal: React.FC<SetbackModalProps> = ({
   customCartridges = {}
 }) => {
   const [parentCaliberKey, setParentCaliberKey] = useState<string>('308_win');
+  const [isPickerOpen, setIsPickerOpen] = useState<boolean>(false);
   const oldSpec = allPresets[parentCaliberKey] || allPresets['308_win'] || CARTRIDGE_PRESETS['308_win'];
   const newSpec = currentCartridge;
 
@@ -87,46 +89,40 @@ export const SetbackModal: React.FC<SetbackModalProps> = ({
         {/* Existing Chamber Caliber Selector */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-tertiary)', padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
           <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>Existing Chamber:</span>
-          <select
-            value={parentCaliberKey}
-            onChange={(e) => setParentCaliberKey(e.target.value)}
+          <div
+            onClick={() => setIsPickerOpen(true)}
             style={{
               background: '#090d14',
               color: '#fff',
               border: '1px solid var(--border-color)',
               borderRadius: '4px',
-              padding: '4px 8px',
+              padding: '4px 10px',
               fontSize: '12px',
-              outline: 'none',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
             }}
           >
-            {Object.keys(customCartridges).length > 0 && (
-              <optgroup label="── CUSTOM WILDCATS & DESIGNS ──">
-                {Object.entries(customCartridges).map(([key, item]) => (
-                  <option key={key} value={key}>
-                    {item.name}
-                  </option>
-                ))}
-              </optgroup>
-            )}
-
-            {CARTRIDGE_CATEGORIES.map((cat) => {
-              const items = Object.entries(allPresets).filter(
-                ([_, item]) => item.category === cat
-              );
-              if (items.length === 0) return null;
-              return (
-                <optgroup key={cat} label={`── ${cat.toUpperCase()} ──`}>
-                  {items.map(([key, item]) => (
-                    <option key={key} value={key}>
-                      {item.name}
-                    </option>
-                  ))}
-                </optgroup>
-              );
-            })}
-          </select>
+            <span>{oldSpec.name}</span>
+            <Search size={13} color="#94a3b8" />
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsPickerOpen(true)}
+            style={{
+              background: 'rgba(0, 240, 255, 0.12)',
+              border: '1px solid rgba(0, 240, 255, 0.3)',
+              borderRadius: '4px',
+              color: 'var(--cad-cyan)',
+              padding: '4px 10px',
+              fontSize: '11px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            Browse...
+          </button>
         </div>
       </div>
 
@@ -223,6 +219,18 @@ export const SetbackModal: React.FC<SetbackModalProps> = ({
           </ul>
         </div>
       )}
+
+      <CartridgePickerModal
+        isOpen={isPickerOpen}
+        onClose={() => setIsPickerOpen(false)}
+        onSelectCartridge={(cartridge) => {
+          setParentCaliberKey(cartridge.id);
+          setIsPickerOpen(false);
+        }}
+        currentSelectedId={parentCaliberKey}
+        customCartridges={customCartridges}
+        title="Select Existing Barrel Chamber to Re-ream"
+      />
     </div>
   );
 };

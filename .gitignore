@@ -26,3 +26,14 @@ target
 *.njsproj
 *.sln
 *.sw?
+
+# Local scratch & developer notes
+Current_bugs
+current_bugs
+Current_bugs.*
+*.scratch.*
+
+# AI Agent rules & configurations
+.agents/
+AGENTS.md
+agents.md

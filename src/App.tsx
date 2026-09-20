@@ -4,10 +4,16 @@ import {
   calculateVolumetricsFrontend, 
   exportQuickLoadQDF,
   exportWildcatSpec,
-  exportLoadBenchRecipe
+  exportLoadBenchRecipe,
+  exportRangeStudioBallistics,
+  parseWildcatSpec
 } from './utils/volumetrics';
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import { loadCustomCartridges, saveCustomCartridge, deleteCustomCartridge } from './utils/customCartridges';
 import { useHistory } from './utils/useHistory';
+import { saveExportFile } from './utils/fileExport';
+import { ToastProvider, useToast } from './components/common/Toast';
 import { Navbar, ViewMode } from './components/Navbar';
 import { VolumetricHUD } from './components/VolumetricHUD';
 import { ParametricControls } from './components/ParametricControls';
@@ -24,9 +30,12 @@ import { HeadspaceModal } from './components/HeadspaceModal';
 import { TwistStabilityModal } from './components/TwistStabilityModal';
 import { ScreenCalibrationModal } from './components/ScreenCalibrationModal';
 import { UserGuideModal } from './components/UserGuideModal';
+import { FormingModal } from './components/modals/FormingModal';
+import { UpdateModal } from './components/modals/UpdateModal';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-export function App() {
+function AppContent() {
+  const { showSuccess, showError } = useToast();
   const {
     state: cartridge,
     set: setCartridge,
@@ -47,6 +56,10 @@ export function App() {
   const [isHeadspaceModalOpen, setIsHeadspaceModalOpen] = useState<boolean>(false);
   const [isTwistModalOpen, setIsTwistModalOpen] = useState<boolean>(false);
   const [isUserGuideOpen, setIsUserGuideOpen] = useState<boolean>(false);
+  const [isFormingModalOpen, setIsFormingModalOpen] = useState<boolean>(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
+  const [isUpdateAvailable, setIsUpdateAvailable] = useState<boolean>(false);
+  const [updateVersion, setUpdateVersion] = useState<string>('');
   const [draftingStandard, setDraftingStandard] = useState<DraftingStandard>('saami');
   const [toleranceMode, setToleranceMode] = useState<ToleranceDisplayMode>('nominal');
   const [ghostCartridge, setGhostCartridge] = useState<CartridgeSpec | null>(null);
@@ -126,6 +139,79 @@ export function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Handle cold-start and runtime file opens via macOS File Associations and Drag-Drop
+  useEffect(() => {
+    // 1. Check for pending file on startup (cold start via Finder or CLI)
+    invoke<{ name: string; path: string; content: string } | null>('get_pending_open_file')
+      .then((pending) => {
+        if (pending && pending.content) {
+          const parsed = parseWildcatSpec(pending.content);
+          if (parsed) {
+            setCartridge(parsed, true);
+            showSuccess('Cartridge Opened', `Loaded ${parsed.name} from ${pending.name}`);
+          }
+        }
+      })
+      .catch(() => {
+        // Not in Tauri or no pending file
+      });
+
+    // 2. Listen for live file-open events from Tauri event loop (runtime Finder "Open With" / double-click)
+    let unlistenFn: (() => void) | null = null;
+    listen<{ name: string; path: string; content: string }>('wildcat://open-file', (event) => {
+      if (event.payload && event.payload.content) {
+        const parsed = parseWildcatSpec(event.payload.content);
+        if (parsed) {
+          setCartridge(parsed, true);
+          showSuccess('Cartridge Opened', `Loaded ${parsed.name} from ${event.payload.name}`);
+        }
+      }
+    })
+      .then((unlisten) => {
+        unlistenFn = unlisten;
+      })
+      .catch(() => {});
+
+    // 3. Window Drag-and-Drop Handler (drag .wildcat file onto CAD window)
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'copy';
+      }
+    };
+
+    const handleDrop = (e: DragEvent) => {
+      e.preventDefault();
+      const files = e.dataTransfer?.files;
+      if (!files || files.length === 0) return;
+
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const text = ev.target?.result as string;
+        if (text) {
+          const parsed = parseWildcatSpec(text);
+          if (parsed) {
+            setCartridge(parsed, true);
+            showSuccess('Cartridge Imported', `Loaded ${parsed.name} (${file.name})`);
+          } else {
+            showError('Import Error', `Could not parse ${file.name} as a valid cartridge specification.`);
+          }
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    window.addEventListener('dragover', handleDragOver);
+    window.addEventListener('drop', handleDrop);
+
+    return () => {
+      if (unlistenFn) unlistenFn();
+      window.removeEventListener('dragover', handleDragOver);
+      window.removeEventListener('drop', handleDrop);
+    };
+  }, [setCartridge, showSuccess, showError]);
+
   // High-speed real-time volumetric calculation
   const volumetrics: VolumetricResult = useMemo(() => {
     return calculateVolumetricsFrontend(cartridge);
@@ -169,60 +255,89 @@ export function App() {
     }
   };
 
-  const handleExportWildcat = () => {
+  const handleExportWildcat = async () => {
     const jsonText = exportWildcatSpec(cartridge);
-    const blob = new Blob([jsonText], { type: 'application/vnd.wildcatstudio.cartridge+json;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${cartridge.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.wildcat`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const res = await saveExportFile({
+      defaultFileName: `${cartridge.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.wildcat`,
+      filters: [{ name: 'Wildcat Cartridge Spec', extensions: ['wildcat', 'wcs', 'json'] }],
+      content: jsonText,
+      mimeType: 'application/vnd.wildcatstudio.cartridge+json;charset=utf-8',
+      title: 'Export Wildcat Cartridge Specification'
+    });
+    if (res.success && res.path) {
+      showSuccess('Wildcat Spec Exported', `Saved to ${res.path}`);
+    } else if (res.error) {
+      showError('Export Failed', res.error);
+    }
   };
 
-  const handleExportLoadBench = () => {
+  const handleExportLoadBench = async () => {
     const jsonText = exportLoadBenchRecipe(cartridge);
-    const blob = new Blob([jsonText], { type: 'application/vnd.loadbench.recipe+json;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${cartridge.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.loadbench`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const res = await saveExportFile({
+      defaultFileName: `${cartridge.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.loadbench`,
+      filters: [{ name: 'LoadBench Project Recipe', extensions: ['loadbench', 'json'] }],
+      content: jsonText,
+      mimeType: 'application/vnd.loadbench.recipe+json;charset=utf-8',
+      title: 'Export to LoadBench Project Recipe'
+    });
+    if (res.success && res.path) {
+      showSuccess('LoadBench Recipe Exported', `Saved to ${res.path}`);
+    } else if (res.error) {
+      showError('Export Failed', res.error);
+    }
   };
 
-  const handleExportQuickload = () => {
+  const handleExportQuickload = async () => {
     const volContent = `${cartridge.name}\n${volumetrics.overflow_capacity_grains_h2o.toFixed(2)}\n${cartridge.bullet_diameter.toFixed(4)}\n${cartridge.case_length.toFixed(4)}\n${cartridge.coal.toFixed(4)}`;
-    const blob = new Blob([volContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${cartridge.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.vol`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const res = await saveExportFile({
+      defaultFileName: `${cartridge.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.vol`,
+      filters: [{ name: 'QuickLOAD Volumetric Data', extensions: ['vol', 'txt'] }],
+      content: volContent,
+      mimeType: 'text/plain;charset=utf-8',
+      title: 'Export QuickLOAD Volumetric Data'
+    });
+    if (res.success && res.path) {
+      showSuccess('QuickLOAD Data Exported', `Saved to ${res.path}`);
+    } else if (res.error) {
+      showError('Export Failed', res.error);
+    }
   };
 
-  const handleExportQuickLoadQdf = () => {
+  const handleExportQuickLoadQdf = async () => {
     const qdfText = exportQuickLoadQDF(cartridge);
-    const blob = new Blob([qdfText], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${cartridge.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.qdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const res = await saveExportFile({
+      defaultFileName: `${cartridge.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.qdf`,
+      filters: [{ name: 'QuickLOAD QDF Data', extensions: ['qdf', 'dat', 'txt'] }],
+      content: qdfText,
+      mimeType: 'text/plain;charset=utf-8',
+      title: 'Export QuickLOAD QDF File'
+    });
+    if (res.success && res.path) {
+      showSuccess('QuickLOAD QDF Exported', `Saved to ${res.path}`);
+    } else if (res.error) {
+      showError('Export Failed', res.error);
+    }
+  };
+
+  // RangeStudio Ballistics Profile Export
+  const handleExportRangeStudio = async () => {
+    const rsbJson = exportRangeStudioBallistics(cartridge);
+    const res = await saveExportFile({
+      defaultFileName: `${cartridge.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.rsb`,
+      filters: [{ name: 'RangeStudio Ballistics Profile', extensions: ['rsb', 'json'] }],
+      content: rsbJson,
+      mimeType: 'application/vnd.rangestudio.ballistics+json;charset=utf-8',
+      title: 'Export RangeStudio Ballistics Profile'
+    });
+    if (res.success && res.path) {
+      showSuccess('RangeStudio Profile Exported', `Saved to ${res.path}`);
+    } else if (res.error) {
+      showError('Export Failed', res.error);
+    }
   };
 
   // AutoCAD DXF Export
-  const handleExportDxf = () => {
+  const handleExportDxf = async () => {
     let out = "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1009\n0\nENDSEC\n";
     out += "0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n70\n3\n";
     out += "0\nLAYER\n2\nCARTRIDGE\n70\n0\n62\n2\n6\nCONTINUOUS\n";
@@ -240,13 +355,18 @@ export function App() {
 
     out += "0\nENDSEC\n0\nEOF\n";
 
-    const blob = new Blob([out], { type: 'application/dxf' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${cartridge.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}.dxf`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const res = await saveExportFile({
+      defaultFileName: `${cartridge.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}.dxf`,
+      filters: [{ name: 'AutoCAD DXF Drawing', extensions: ['dxf'] }],
+      content: out,
+      mimeType: 'application/dxf',
+      title: 'Export AutoCAD DXF Drawing'
+    });
+    if (res.success && res.path) {
+      showSuccess('AutoCAD DXF Exported', `Saved to ${res.path}`);
+    } else if (res.error) {
+      showError('Export Failed', res.error);
+    }
   };
 
   // Trigger 3D Viewport STL download
@@ -296,6 +416,7 @@ export function App() {
         onToggleOneToOne={() => setIsOneToOne(!isOneToOne)}
         onExportWildcat={handleExportWildcat}
         onExportLoadBench={handleExportLoadBench}
+        onExportRangeStudio={handleExportRangeStudio}
         onExportQuickload={handleExportQuickload}
         onExportQuickLoadQdf={handleExportQuickLoadQdf}
         onExportDxf={handleExportDxf}
@@ -309,6 +430,10 @@ export function App() {
         onToggleSidebar={toggleSidebar}
         onOpenHeadspaceModal={() => setIsHeadspaceModalOpen(true)}
         onOpenTwistModal={() => setIsTwistModalOpen(true)}
+        onOpenFormingModal={() => setIsFormingModalOpen(true)}
+        onOpenUpdateModal={() => setIsUpdateModalOpen(true)}
+        updateAvailable={isUpdateAvailable}
+        updateVersion={updateVersion}
         onOpenCalibration={() => setIsCalibrationModalOpen(true)}
         toleranceMode={toleranceMode}
         onChangeToleranceMode={setToleranceMode}
@@ -626,8 +751,48 @@ export function App() {
           setIsUserGuideOpen(false);
           setIsPrintSheetOpen(true);
         }}
+        onOpenHeadspaceModal={() => {
+          setIsUserGuideOpen(false);
+          setIsHeadspaceModalOpen(true);
+        }}
+        onOpenTwistModal={() => {
+          setIsUserGuideOpen(false);
+          setIsTwistModalOpen(true);
+        }}
+        onOpenFormingModal={() => {
+          setIsUserGuideOpen(false);
+          setIsFormingModalOpen(true);
+        }}
+      />
+
+      {/* Case Forming, Fire-Forming & Donut Diagnostic Solver */}
+      <FormingModal
+        isOpen={isFormingModalOpen}
+        onClose={() => setIsFormingModalOpen(false)}
+        activeCartridge={cartridge}
+        allPresets={allPresets}
+        customCartridges={customCartridges}
+        isMetric={isMetric}
+      />
+
+      {/* In-App Auto-Updater Modal */}
+      <UpdateModal
+        isOpen={isUpdateModalOpen}
+        onClose={() => setIsUpdateModalOpen(false)}
+        onUpdateAvailableChange={(available, ver) => {
+          setIsUpdateAvailable(available);
+          if (ver) setUpdateVersion(ver);
+        }}
       />
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <ToastProvider>
+      <AppContent />
+    </ToastProvider>
   );
 }
 

@@ -10,7 +10,6 @@ import {
   WildcatTransformResult 
 } from '../utils/wildcatting';
 import { calculateVolumetrics, analyzeCaseForming } from '../utils/volumetrics';
-import { CALIBER_PRESETS } from '../data/bullets';
 import { 
   Wand2, 
   X, 
@@ -21,8 +20,10 @@ import {
   ShieldCheck, 
   Scissors, 
   Sparkles,
-  BookmarkPlus
+  BookmarkPlus,
+  Search
 } from 'lucide-react';
+import { CartridgePickerModal } from './modals/CartridgePickerModal';
 
 interface WildcatWizardModalProps {
   isOpen: boolean;
@@ -51,6 +52,7 @@ export const WildcatWizardModal: React.FC<WildcatWizardModalProps> = ({
 
   const [selectedParentId, setSelectedParentId] = useState<string>(activeCartridge.id);
   const [wizardMode, setWizardMode] = useState<WizardMode>('neck');
+  const [isPickerOpen, setIsPickerOpen] = useState<boolean>(false);
   
   // Mode 1: Necking
   const [selectedCaliber, setSelectedCaliber] = useState<CaliberOption>(() => {
@@ -138,13 +140,16 @@ export const WildcatWizardModal: React.FC<WildcatWizardModalProps> = ({
         inset: 0,
         zIndex: 200,
         background: 'rgba(5, 8, 14, 0.85)',
+        WebkitBackdropFilter: 'blur(16px)',
         backdropFilter: 'blur(16px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px'
       }}
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div 
         onClick={(e) => e.stopPropagation()}
@@ -273,10 +278,12 @@ export const WildcatWizardModal: React.FC<WildcatWizardModalProps> = ({
         </div>
 
         {/* Content Body: Dual Column */}
-        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
           
           {/* LEFT: Controls & Parent Selection */}
           <div style={{
+            flex: 1,
+            minHeight: 0,
             padding: '20px',
             overflowY: 'auto',
             borderRight: '1px solid var(--border-color)',
@@ -289,42 +296,55 @@ export const WildcatWizardModal: React.FC<WildcatWizardModalProps> = ({
               <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--cad-cyan)', display: 'block', marginBottom: '6px' }}>
                 PARENT BASELINE CARTRIDGE
               </label>
-              <select
-                id="select-wizard-parent"
-                value={selectedParentId}
-                onChange={(e) => {
-                  setSelectedParentId(e.target.value);
-                  setCustomWildcatName('');
-                }}
-                style={{
-                  width: '100%',
-                  background: 'var(--bg-tertiary)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: '6px',
-                  color: '#fff',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  padding: '8px 10px',
-                  outline: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                {Object.entries(allCartridges).map(([id, item]) => (
-                  <option key={id} value={id}>
-                    {item.name} ({item.standard})
-                  </option>
-                ))}
-              </select>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <div
+                  id="select-wizard-parent"
+                  onClick={() => setIsPickerOpen(true)}
+                  style={{
+                    flex: 1,
+                    background: 'var(--bg-tertiary)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '6px',
+                    color: '#fff',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    padding: '8px 12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                    {parent.name} <span style={{ color: 'var(--cad-cyan)', fontSize: '11px' }}>({parent.standard})</span>
+                  </span>
+                  <Search size={14} color="var(--text-muted)" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsPickerOpen(true)}
+                  style={{
+                    background: 'rgba(0, 240, 255, 0.12)',
+                    border: '1px solid rgba(0, 240, 255, 0.3)',
+                    borderRadius: '6px',
+                    color: 'var(--cad-cyan)',
+                    padding: '6px 12px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Browse...
+                </button>
+              </div>
             </div>
 
             {/* Step B: Mode-Specific Parameter Configuration */}
             {wizardMode === 'neck' && (() => {
               const filteredCalibers = selectedCaliberFilter === 'All'
                 ? STANDARD_CALIBERS
-                : STANDARD_CALIBERS.filter(cal => {
-                    const found = CALIBER_PRESETS.find(p => p.inches === cal.inches);
-                    return found && found.category === selectedCaliberFilter;
-                  });
+                : STANDARD_CALIBERS.filter(cal => cal.category === selectedCaliberFilter);
 
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -376,11 +396,11 @@ export const WildcatWizardModal: React.FC<WildcatWizardModalProps> = ({
                   {/* Caliber Grid */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', maxHeight: '185px', overflowY: 'auto', paddingRight: '2px' }}>
                     {filteredCalibers.map((cal) => {
-                      const isSelected = selectedCaliber.inches === cal.inches;
+                      const isSelected = selectedCaliber.inches === cal.inches && selectedCaliber.designation === cal.designation;
                       const isParentCal = Math.abs(parent.bullet_diameter - cal.inches) < 0.005;
                       return (
                         <button
-                          key={cal.inches}
+                          key={`${cal.category}-${cal.designation}-${cal.inches}`}
                           onClick={() => setSelectedCaliber(cal)}
                           style={{
                             background: isSelected ? 'var(--cad-cyan)' : isParentCal ? 'rgba(240, 136, 62, 0.15)' : 'var(--bg-card)',
@@ -651,6 +671,8 @@ export const WildcatWizardModal: React.FC<WildcatWizardModalProps> = ({
 
           {/* RIGHT: Live CAD Silhouette & Telemetry Comparison */}
           <div style={{
+            flex: 1,
+            minHeight: 0,
             padding: '20px',
             background: 'var(--bg-primary)',
             overflowY: 'auto',
@@ -997,8 +1019,20 @@ export const WildcatWizardModal: React.FC<WildcatWizardModalProps> = ({
             </button>
           </div>
         </div>
-
       </div>
+
+      <CartridgePickerModal
+        isOpen={isPickerOpen}
+        onClose={() => setIsPickerOpen(false)}
+        onSelectCartridge={(cartridge) => {
+          setSelectedParentId(cartridge.id);
+          setCustomWildcatName('');
+          setIsPickerOpen(false);
+        }}
+        currentSelectedId={selectedParentId}
+        customCartridges={customCartridges}
+        title="Select Parent Baseline Cartridge"
+      />
     </div>
   );
 };

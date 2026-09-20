@@ -14,8 +14,8 @@ This is the private source code repository for **Wildcat Studio**, the industria
 
 ## Architecture
 
-- **Frontend CAD & GUI Layer**: React 18, TypeScript, Tailwind/Vanilla CSS, Lucide icons, Canvas 2D vector drafting engine, and WebGL lathe preview.
-- **Backend Native Core**: Rust (Tauri 2), Simpson composite 1000-slice numerical integrator, reamer tooling clearance solver, DXF/STL exporters.
+- **Frontend CAD & GUI Layer**: React 18, TypeScript, Tailwind/Vanilla CSS, Lucide vector icons, Canvas 2D vector drafting engine, and WebGL 3D lathe preview.
+- **Backend Native Core**: Rust (Tauri 2), Simpson composite 1000-slice numerical integrator, reamer tooling clearance solver, DXF/STL exporters, macOS/Windows native print bridges, and native OS document file associations (`.wildcat`, `.wcs`, `.vol`, `.loadbench`).
 - **Security & Obfuscation**:
   - Terser variable/property mangling with top-level identifier scrambling.
   - Zero sourcemap generation (`sourcemap: false`).
@@ -57,9 +57,9 @@ Wildcat Studio is engineered as part of the unified precision ballistics and fir
 
 - **[ArmsTrader (armstrader.store)](https://armstrader.store)** — Free web tools and digital utilities suite for firearm owners (Firearm Bill of Sale Generator, Nationwide FFL Finder, Shooting Range Locator, and 50-State Gun Laws Directory). *Note: ArmsTrader is NOT a marketplace, broker, or dealer.*
 - **[ArmoryVault](https://github.com/cook0001/armoryvault)** — High-performance desktop firearm inventory, ATF compliance & vault logistics suite.
-- **[ArmoryVault Companion](https://github.com/cook0001/armoryvault-companion)** — Offline mobile firearm barcode scanner and encrypted LAN sync for Android.
-- **[LoadBench Studio](https://github.com/cook0001/loadbench)** — Industrial interior ballistics simulation, propellant combustion & chamber pressure modeling suite.
-- **[RangeStudio](https://github.com/cook0001/rangestudio)** — Precision exterior ballistics, 4th-order Runge-Kutta trajectory engine & optical reticle simulator.
+- **[ArmoryVault Companion](https://armstrader.store/companion)** — Offline mobile firearm barcode scanner and encrypted LAN sync for Android.
+- **[LoadBench Studio](https://armstrader.store/loadbench)** — Industrial interior ballistics simulation, propellant combustion & chamber pressure modeling suite.
+- **[RangeStudio](https://armstrader.store/rangestudio)** — Precision exterior ballistics, 4th-order Runge-Kutta trajectory engine & optical reticle simulator.
 
 ---
 

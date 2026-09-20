@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { CartridgeSpec } from '../types/cartridge';
 import { generateReamerSpecFrontend } from '../utils/volumetrics';
-import { Check, Copy, Printer, Wrench, Download, Building } from 'lucide-react';
+import { saveExportFile, openStandalonePrintWindow, openNativePdfPrint, isTypstAvailable, compileTypstToPdf } from '../utils/fileExport';
+import { generateReamerTypst } from '../utils/typstTemplates';
+import { Check, Copy, Printer, Wrench, Download, Building, Compass, FileText } from 'lucide-react';
+import { ReamerCADShopPrint } from './reamer/ReamerCADShopPrint';
 
 interface ReamerModalProps {
   cartridge: CartridgeSpec;
@@ -13,6 +16,7 @@ export type NeckFitOption = 'factory' | 'fitted' | 'tight';
 export type ToolType = 'finisher' | 'rougher' | 'neck_throat';
 
 export const ReamerModal: React.FC<ReamerModalProps> = ({ cartridge, isMetric }) => {
+  const [activeTab, setActiveTab] = useState<'order' | 'cad_print'>('order');
   const [manufacturer, setManufacturer] = useState<ManufacturerFormat>('jgs');
   const [toolType, setToolType] = useState<ToolType>('finisher');
   const [pilotType, setPilotType] = useState<'floating' | 'solid'>('floating');
@@ -118,15 +122,66 @@ Date: ${new Date().toLocaleDateString()}
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleDownloadTxt = () => {
+  const handleDownloadOrder = async () => {
+    const typstOk = await isTypstAvailable();
+    if (typstOk) {
+      try {
+        const typstCode = generateReamerTypst(cartridge, baseReamer, manufacturerNames[manufacturer]);
+        const pdfBytes = await compileTypstToPdf(typstCode);
+        await saveExportFile({
+          defaultFileName: `Reamer_Order_${manufacturer.toUpperCase()}_${cartridge.id}.pdf`,
+          filters: [{ name: 'PDF Document', extensions: ['pdf'] }],
+          content: pdfBytes,
+          mimeType: 'application/pdf',
+          title: 'Save Reamer Toolmaker PDF Order',
+        });
+        return;
+      } catch (err) {
+        console.warn('Typst PDF export failed, falling back to TXT:', err);
+      }
+    }
+
     const text = generateOrderText();
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Reamer_Order_${manufacturer.toUpperCase()}_${cartridge.id}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    await saveExportFile({
+      defaultFileName: `Reamer_Order_${manufacturer.toUpperCase()}_${cartridge.id}.txt`,
+      filters: [{ name: 'Text Documents', extensions: ['txt'] }],
+      content: text,
+      mimeType: 'text/plain;charset=utf-8',
+      title: 'Save Toolmaker Order File',
+    });
+  };
+
+  const handlePrintRequisition = async () => {
+    const typstOk = await isTypstAvailable();
+    if (typstOk) {
+      try {
+        const typstCode = generateReamerTypst(cartridge, baseReamer, manufacturerNames[manufacturer]);
+        const pdfBytes = await compileTypstToPdf(typstCode);
+        // Opens directly in Preview.app on macOS for instant toolroom printing!
+        await openNativePdfPrint(pdfBytes, `Reamer_Order_${cartridge.name}`);
+        return;
+      } catch (err) {
+        console.warn('Typst PDF preview print failed, falling back to vector print sheet:', err);
+      }
+    }
+
+    const orderText = generateOrderText();
+    const printHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Reamer Specification - ${cartridge.name}</title>
+          <style>
+            @page { size: letter portrait; margin: 0.5in; }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'SF Mono', 'Segoe UI Mono', monospace; font-size: 11px; line-height: 1.45; color: #000; padding: 24px; white-space: pre-wrap; }
+            @media print { body { padding: 0; } }
+          </style>
+        </head>
+        <body>${orderText}</body>
+      </html>
+    `;
+    await openStandalonePrintWindow(printHtml, `Reamer Order - ${cartridge.name}`);
   };
 
   return (
@@ -168,7 +223,7 @@ Date: ${new Date().toLocaleDateString()}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
-            onClick={() => window.print()}
+            onClick={handlePrintRequisition}
             style={{
               background: 'rgba(255, 255, 255, 0.06)',
               color: '#e2e8f0',
@@ -188,7 +243,7 @@ Date: ${new Date().toLocaleDateString()}
           </button>
 
           <button
-            onClick={handleDownloadTxt}
+            onClick={handleDownloadOrder}
             style={{
               background: 'rgba(0, 240, 255, 0.12)',
               color: 'var(--cad-cyan, #00f0ff)',
@@ -204,7 +259,7 @@ Date: ${new Date().toLocaleDateString()}
             }}
           >
             <Download size={15} />
-            <span>Download Order (.txt)</span>
+            <span>Download Order</span>
           </button>
 
           <button
@@ -230,18 +285,81 @@ Date: ${new Date().toLocaleDateString()}
         </div>
       </div>
 
-      {/* Manufacturer Selection Tabs */}
+      {/* View Mode Tab Switcher */}
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
+          display: 'flex',
           gap: '8px',
           background: 'var(--bg-secondary, #0e121a)',
-          padding: '6px',
+          padding: '4px',
           borderRadius: '8px',
           border: '1px solid var(--border-color, #1e2638)',
+          width: 'fit-content',
         }}
       >
+        <button
+          onClick={() => setActiveTab('order')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '7px 14px',
+            borderRadius: '6px',
+            border: activeTab === 'order' ? '1px solid var(--cad-cyan, #00f0ff)' : '1px solid transparent',
+            background: activeTab === 'order' ? 'rgba(0, 240, 255, 0.12)' : 'transparent',
+            color: activeTab === 'order' ? '#fff' : 'var(--text-secondary, #94a3b8)',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: 'pointer',
+          }}
+        >
+          <FileText size={14} color={activeTab === 'order' ? 'var(--cad-cyan, #00f0ff)' : 'var(--text-muted, #64748b)'} />
+          <span>Toolmaker Order Requisition</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('cad_print')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '7px 14px',
+            borderRadius: '6px',
+            border: activeTab === 'cad_print' ? '1px solid var(--cad-cyan, #00f0ff)' : '1px solid transparent',
+            background: activeTab === 'cad_print' ? 'rgba(0, 240, 255, 0.12)' : 'transparent',
+            color: activeTab === 'cad_print' ? '#fff' : 'var(--text-secondary, #94a3b8)',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: 'pointer',
+          }}
+        >
+          <Compass size={14} color={activeTab === 'cad_print' ? 'var(--cad-cyan, #00f0ff)' : 'var(--text-muted, #64748b)'} />
+          <span>CAD Engineering Blueprint & Headspace Gauges</span>
+        </button>
+      </div>
+
+      {activeTab === 'cad_print' ? (
+        <ReamerCADShopPrint
+          cartridge={cartridge}
+          isMetric={isMetric}
+          leadeAngle={leadeAngle}
+          neckFit={neckFit}
+          pilotType={pilotType}
+        />
+      ) : (
+        <>
+          {/* Manufacturer Selection Tabs */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '8px',
+              background: 'var(--bg-secondary, #0e121a)',
+              padding: '6px',
+              borderRadius: '8px',
+              border: '1px solid var(--border-color, #1e2638)',
+            }}
+          >
         {[
           { id: 'jgs', label: 'JGS Precision Tool Mfg', sub: 'Coos Bay, Oregon' },
           { id: 'ptg', label: 'Pacific Tool & Gauge (PTG)', sub: 'White City, Oregon' },
@@ -693,6 +811,8 @@ Date: ${new Date().toLocaleDateString()}
           />
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 };

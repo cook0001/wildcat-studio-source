@@ -51,13 +51,16 @@ export const CompareModal: React.FC<CompareModalProps> = ({
         inset: 0,
         zIndex: 200,
         background: 'rgba(5, 8, 14, 0.85)',
+        WebkitBackdropFilter: 'blur(16px)',
         backdropFilter: 'blur(16px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px'
       }}
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div
         onClick={(e) => e.stopPropagation()}

@@ -3060,7 +3060,7 @@ export const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
                         const isActive = Math.abs(editingDim.displayVal - display) < 0.003;
                         return (
                           <button
-                            key={cal.inches}
+                            key={`${cal.category}-${cal.designation}-${cal.inches}`}
                             type="button"
                             title={`${cal.designation} (${cal.commonCartridges})`}
                             onClick={() => handleApplyDimChange(display)}
