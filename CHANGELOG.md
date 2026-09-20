@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Custom Application & Taskbar Icon Suite (`app-icon.png`, `src-tauri/icons/`, `public/app-icon.png`, `public/icon.png`)**:
+  - Implemented high-definition Split Gunmetal & Glowing Blueprint CAD Wireframe Cutaway icon (Concept C) featuring an upright cartridge split down the center: half solid brushed gunmetal steel, and half glowing electric blueprint cyan CAD wireframe cutaway with internal powder volume ticks.
+  - Generated complete cross-platform icon assets for macOS (`icon.icns`), Windows (`icon.ico`, `Square*Logo.png`), Linux (`32x32.png`, `64x64.png`, `128x128.png`, `icon.png`), and web favicon (`public/app-icon.png`, `public/icon.png`, `public/favicon.ico`).
 - **Proprietary Freeware License & Distribution Alignment (`package.json`, `README.md`, `LICENSE`)**:
   - Formalized proprietary free-to-use licensing model under the Wildcat Studio End User License Agreement.
   - Updated `package.json` to `"license": "SEE LICENSE IN LICENSE"`.
