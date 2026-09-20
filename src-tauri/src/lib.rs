@@ -177,6 +177,7 @@ fn trigger_system_pdf_print(pdf_data: Vec<u8>, title: String) -> Result<String, 
     Ok(path_str)
 }
 
+#[allow(unused_imports)]
 use tauri::{Emitter, Manager};
 
 #[derive(Clone, serde::Serialize)]
