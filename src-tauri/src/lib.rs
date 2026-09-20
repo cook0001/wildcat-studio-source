@@ -243,8 +243,9 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building Wildcat Studio");
 
-    app.run(|app_handle, event| {
-        if let tauri::RunEvent::Opened { urls } = event {
+    app.run(|_app_handle, _event| {
+        #[cfg(target_os = "macos")]
+        if let tauri::RunEvent::Opened { ref urls } = _event {
             for url in urls {
                 if let Ok(file_path) = url.to_file_path() {
                     let path_str = file_path.to_string_lossy().to_string();
@@ -255,12 +256,12 @@ pub fn run() {
                             path: path_str,
                             content,
                         };
-                        if let Some(state) = app_handle.try_state::<PendingOpenFile>() {
+                        if let Some(state) = _app_handle.try_state::<PendingOpenFile>() {
                             if let Ok(mut lock) = state.0.lock() {
                                 *lock = Some(payload.clone());
                             }
                         }
-                        let _ = app_handle.emit("wildcat://open-file", &payload);
+                        let _ = _app_handle.emit("wildcat://open-file", &payload);
                     }
                 }
             }
